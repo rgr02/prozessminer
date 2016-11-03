@@ -18,22 +18,26 @@ body<- dashboardBody(
            fluidRow(
              column(width=12,
                     h5("Beschriftung Graph"),
-                    radioButtons("anzeige", label=NULL, choices = c("Dauer", "Anzahl")))
+                    radioButtons("anzeige", label=NULL, choices = c("Dauer", "Anzahl"),inline = T))
            ),#row 
            fluidRow(
              column(width=12,
                     h5("Statistics"),
-                    verbatimTextOutput("statistics"))
+                    verbatimTextOutput("statistics"),
+                    h5("Matrix"),
+                    verbatimTextOutput("matrix"))
            )
     )
   ),
   fluidRow(
     column(width=7,
-           
+           h5("Abdeckung"),
            plotOutput("abdeckung", height = "200px")
     ),
     column(width=5,
-           verbatimTextOutput("matrix"))
+           h5("Aktivitäten"),
+           plotOutput("aktivitaeten", height="200px")
+           )
   )
 )
 
