@@ -1,8 +1,9 @@
-#install.packages("networkD3")
+#install.packages("visNetwork")
 library(shiny)
 library(shinydashboard)
 library(networkD3)
 library(DiagrammeR)
+library(visNetwork)
 header<- dashboardHeader(title = "Prototyp")
 
 sidebar<- dashboardSidebar()
@@ -10,14 +11,15 @@ sidebar<- dashboardSidebar()
 body<- dashboardBody(
   fluidRow(
     column(width=7,      
-           simpleNetworkOutput("network", width = "80%", height = "250px")
+           #simpleNetworkOutput("network", width = "80%", height = "250px"),
+           visNetworkOutput("networkVis", width="80%", height="250px")
     ),
     column(width=5,
            fluidRow(
              column(width=12,
                     h5("Beschriftung Graph"),
                     radioButtons("anzeige", label=NULL, choices = c("Dauer", "Anzahl")))
-           ),#row
+           ),#row 
            fluidRow(
              column(width=12,
                     h5("Statistics"),
@@ -38,5 +40,3 @@ body<- dashboardBody(
 ui<- dashboardPage(header, sidebar, body)
 
 
-shinyApp(ui, server)
-runApp("C:\path-to-download-location\shiny-d3-plot")
