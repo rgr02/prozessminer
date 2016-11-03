@@ -37,15 +37,14 @@ server <- function(input, output) {
     }
     nodes <- data.frame(id = 1:6, 
                         label = labelN,       
-                        title = paste0("<p><b>", 1:6,"</b><br>Node !</p>")         # tooltip (html or character)
+                        title = paste0("<p><b>", 1:6,"</b><br>Activity</p>")
     )           
     
     
     edges<-data.frame(from = c(1,2,2,3,4,5), to = c(2,3,4,6,5,6),
                       label = labelN)
     
-    visNetwork(nodes,edges) %>%visEdges(arrows ="to")%>%
-      visLayout(improvedLayout = T)
+    visNetwork(nodes,edges) %>%visEdges(arrows ="to")
   })
   
   output$matrix<- renderPrint({

@@ -12,7 +12,7 @@ body<- dashboardBody(
   fluidRow(
     column(width=7,      
            #simpleNetworkOutput("network", width = "80%", height = "250px"),
-           visNetworkOutput("networkVis", width="80%", height="250px")
+           visNetworkOutput("networkVis", width="80%", height="300px")
     ),
     column(width=5,
            fluidRow(
