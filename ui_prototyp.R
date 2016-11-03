@@ -29,10 +29,15 @@ body<- dashboardBody(
            )
     )
   ),
+  #http://shiny.rstudio.com/articles/plot-interaction.html
   fluidRow(
     column(width=7,
            h5("Abdeckung"),
-           plotOutput("abdeckung", height = "200px")
+           plotOutput("abdeckung", height = "200px",
+                      click = "plot_click",
+                      dblclick = "plot_dblclick",
+                      hover = "plot_hover",
+                      brush = "plot_brush")
     ),
     column(width=5,
            h5("Aktivitäten"),
