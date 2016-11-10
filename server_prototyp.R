@@ -11,20 +11,40 @@ server <- function(input, output) {
   })
   
   output$statistics<- renderPrint({
-    data.frame(row.names = c("mean", "Dauer"), val= c(5.12,13))
+   
+    data.frame(row.names = c("mean", "Dauer"), val= c(5.12,13))      
+      
+    
   })
   
   output$abdeckung<- renderPlot({
-    barplot(sort(c(5,8,7,3,1,4,8,12),decreasing = T),col = "#58ACFA")
+    barplot(sort(c(5,8,7,3,1,4,8,12),decreasing = T),col = "#58ACFA",
+            names.arg = c("Var1","Var2","Var3","Var4", "Var5", "Var6","Var7","Var8"))
   })
   
-  output$network1<- renderGrViz({
-    grViz("
-          digraph {
-          layout = twopi
-          node [shape = circle]
-          A -> {B C D} 
-          }")
+  output$networkVis<- renderVisNetwork({
+    anzahlN<-c(10,10,4,6,6,10)
+    anzahlE<-c(4,1,5,2,3,4)
+    dauerN<- paste0(c(3,2,4,1,5,3),"s")
+    dauerE<- paste0(c(4,4,4,1,2,3),"s")
+    
+    if(input$anzeige=="Anzahl"){
+      labelN<- anzahlN
+      labelE<- anzahlE
+    }else{
+      labelN<-dauerN
+      labelE<-dauerE
+    }
+    nodes <- data.frame(id = 1:6, 
+                        label = labelN,       
+                        title = paste0("<p><b>", 1:6,"</b><br>Activity</p>")
+    )           
+    
+    
+    edges<-data.frame(from = c(1,2,2,3,4,5), to = c(2,3,4,6,5,6),
+                      label = labelN)
+    
+    visNetwork(nodes,edges) %>%visEdges(arrows ="to")
   })
   
   output$matrix<- renderPrint({
@@ -35,4 +55,12 @@ server <- function(input, output) {
     
     print(m1)
   })
+  
+  output$aktivitaeten<- renderPlot({
+    barplot(c(2,4,1,3),col = "#58ACFA",names.arg = c("A","B","C","D"))
+    
+  })
 }
+
+runApp(list(ui=ui, server=server))
+
