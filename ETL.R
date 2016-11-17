@@ -52,6 +52,12 @@ head(c(kreditor, änderungsHist, bestellung, bestellPos, warenEingang, rechnung,
 # Annahme das der Name für den EventLog DataFrame event ist
 # workbook anscheinend für createSheet benötigt.
 
-# Auskommentiert bis der Alpha Algorithmus implementiert ist.
-# wb <- loadWorkbook(srcFile, create = T)
-# writeWorksheetToFile(srcFile, event, sheet = createSheet(wb,"EventLog")) 
+# Testdaten schreiben
+event <- c(1,2,3,4,5,6,7,8,9)
+
+wb <- loadWorkbook(srcFile, create = T)
+createSheet(wb,"EventLog")
+saveWorkbook(wb)
+
+writeWorksheetToFile(srcFile, event, sheet = "EventLog" ) 
+
