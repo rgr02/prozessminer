@@ -23,10 +23,10 @@ server <- function(input, output) {
   })
   
   output$networkVis<- renderVisNetwork({
-    anzahlN<-c(10,10,4,6,6,10)
+    anzahlN<-paste0("Akt", 1:6,"\n",c(10,10,4,6,6,10))
     anzahlE<-c(4,1,5,2,3,4)
-    dauerN<- paste0(c(3,2,4,1,5,3),"s")
-    dauerE<- paste0(c(4,4,4,1,2,3),"s")
+    dauerN<- paste0("Akt",1:6,"\n",c(3,2,4,1,5,3),"s")
+    dauerE<- paste0(c(5,4,4,1,2,3),"s")
     
     if(input$anzeige=="Anzahl"){
       labelN<- anzahlN
@@ -35,6 +35,7 @@ server <- function(input, output) {
       labelN<-dauerN
       labelE<-dauerE
     }
+
     nodes <- data.frame(id = 1:6, 
                         label = labelN,       
                         title = paste0("<p><b>", 1:6,"</b><br>Activity</p>")
@@ -42,9 +43,11 @@ server <- function(input, output) {
     
     
     edges<-data.frame(from = c(1,2,2,3,4,5), to = c(2,3,4,6,5,6),
-                      label = labelN)
+                      label = labelE)
     
-    visNetwork(nodes,edges) %>%visEdges(arrows ="to")
+    visNetwork(nodes,edges) %>%visEdges(arrows ="to")%>%
+      visInteraction(dragNodes = TRUE, dragView = TRUE, zoomView = FALSE)
+    
   })
   
   output$matrix<- renderPrint({
@@ -60,6 +63,8 @@ server <- function(input, output) {
     barplot(c(2,4,1,3),col = "#58ACFA",names.arg = c("A","B","C","D"))
     
   })
+  
+  
 }
 
 runApp(list(ui=ui, server=server))
