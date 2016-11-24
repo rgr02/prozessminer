@@ -18,29 +18,25 @@ zahlung = readWorksheetFromFile(srcFile,sheet="Zahlung", header=T)
 
 # Der Versuch, die Arbeitsblätter als Vektor zu übergeben sollte laut Doku
 # funktionieren, liefert hier aber eine Exception
+?readWorksheetFromFile
+sheet <- c("kreditor",
+           "Änderungshistorie",
+           "bestellung",
+           "bestellPos",
+           "warenEingang",
+           "rechnung",
+           "zahlung")
+sheet
 
-# sheet <- c("kreditor",
-#            "änderungsHist",
-#            "bestellung",
-#            "bestellPos",
-#            "warenEingang",
-#            "rechnung",
-#            "zahlung")
-# 
-# data <- readWorksheetFromFile(srcFile,
-#                               sheet=c("kreditor",
-#                                       "änderungsHist",
-#                                       "bestellung",
-#                                       "bestellPos",
-#                                       "warenEingang",
-#                                       "rechnung",
-#                                       "zahlung"),
-#                               header=T)
+data <- readWorksheetFromFile(srcFile,
+                              sheet = "änderungsHist",
+                              header=T)
 # Error: IllegalArgumentException (Java): Sheet index (-1) is out of range (0..7)
 # Ich habe keine Ahnung warum der sheetIndex bei -1 anfängt?
 # Entspricht -1 == Default = False ? Existiert der Vektor?
-# str(data)
-# head(data)
+# Fehler liegt bei änderungsHist im ä !!!
+str(data)
+head(data)
 # 
 # Testausgabe
 str(c(kreditor, änderungsHist, bestellung, bestellPos, warenEingang, rechnung, zahlung))
