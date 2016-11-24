@@ -7,7 +7,7 @@ server <- function(input, output) {
     networkData <- data.frame(src, target)
     
     # Plot
-    simpleNetwork(networkData,)
+    simpleNetwork(networkData)
   })
   
   output$statistics<- renderPrint({

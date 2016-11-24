@@ -52,12 +52,13 @@ head(c(kreditor, änderungsHist, bestellung, bestellPos, warenEingang, rechnung,
 # Annahme das der Name für den EventLog DataFrame event ist
 # workbook anscheinend für createSheet benötigt.
 
-# Testdaten schreiben
-event <- c(1,2,3,4,5,6,7,8,9)
+# Testdaten zum schreiben
+event <- t(c(1,2,3,4,5,6,7,8,9))
 
+# Implementierung laut Doku
 wb <- loadWorkbook(srcFile, create = T)
-createSheet(wb,"EventLog")
+createSheet(wb,"EventLog") # Name für das Arbeitsblatt
 saveWorkbook(wb)
 
-writeWorksheetToFile(srcFile, event, sheet = "EventLog" ) 
+writeWorksheetToFile(srcFile, event, sheet = "EventLog") 
 
