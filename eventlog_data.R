@@ -13,7 +13,7 @@ srcFile <- file.choose()
 #############################################################################
 # (2) ERSTELLEN DER DATAFRAMES
 kreditor = readWorksheetFromFile(srcFile,sheet="Kreditor", header=T)
-änderungsHist = readWorksheetFromFile(srcFile,sheet="Änderungshistorie", header=T)
+aenderungsHist = readWorksheetFromFile(srcFile,sheet="Änderungshistorie", header=T)
 bestellung = readWorksheetFromFile(srcFile,sheet="Bestellung", header=T)
 bestellPos = readWorksheetFromFile(srcFile,sheet="Bestellposition", header=T)
 warenEingang = readWorksheetFromFile(srcFile,sheet="Wareneingang", header=T)
@@ -68,3 +68,4 @@ merge_bbwk$KredNr.x%in%merge_bbw$KredNr.x# False Fälle genauer Ansehen
 merge_bbw[which(!(merge_bbwk$BestellNr%in%merge_bbw$BestellNr)),]
 merge_bbwk[which(!(merge_bbwk$KredNr.x%in%merge_bbw$KredNr.x)),]
 
+str(rechnung)
