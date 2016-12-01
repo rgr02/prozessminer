@@ -2,16 +2,14 @@
 library(edeaR)
 library(visNetwork)
 
-caseID<-rep(c(1,2,3,4), c(4,5,6,4))
-akt<- c("a","b","d","f","a","e","c","d","f", "g","c","e","b","a","f","a","b","d","g")
+caseID<-rep(c(1,2,3,4), c(5,5,6,4))
+akt<- c("a","a","b","d","f","a","e","c","d","f", "g","c","e","b","a","f","a","b","d","g")
 
 eventlog<-data.frame(caseID,akt,stringsAsFactors = F)
-str(eventlog)
-
-end_activities(eventlog)
 
 cases<-unique(eventlog$caseID)
 maxVar<- max(table(eventlog$caseID))
+
 varianten<- NULL
 
 for(i in 1:length(cases)){
@@ -37,6 +35,7 @@ for(i in 1:dim(varianten)[1]){
   anzKennzahl<- c(anzKennzahl,anz)
 }
 anzKennzahl
+varianten_Anz<- cbind(varianten,anzKennzahl)
 varianten
 eventlog
 
@@ -51,9 +50,6 @@ bez<-NULL
 for(i in 1:dim(varianten)[1]){
   for(j in 1:(dim(varianten)[2]-1)){
     bez_help<-c(varianten[i,j], varianten[i,j+1])
-    print(bez_help)
-    print(i)
-    print(j)
     bez_sub<-bez[which(bez[,1]==bez_help[1]),]
     bez_sub<- bez_sub[which(bez_sub[2]==bez_help[2])]
     bez<-rbind(bez, bez_help)
@@ -71,10 +67,15 @@ endEvents<- endEvents[which(endEvents!="X")]
 bez<- bez[which(bez[,1]!="X"),]
 bez<- bez[which(bez[,2]!="X"),]
 
-bez
-dim(bez)
+
 #doppelte Beziehungen entfernen
 alsWort<-unique(paste0(bez[,1],"-",bez[,2]))
+
+wieOftBez1<-table(paste0(bez[,1],"-",bez[,2]))
+namesBez<-  unlist(strsplit(names(wieOftBez1), split="-"))
+wieOftBez<- data.frame(wieOftBez1, matrix(namesBez, ncol = 2, byrow = T),stringsAsFactors = F)
+wieOftBez
+
 vec<-unlist(strsplit(alsWort, split="-"))
 
 bez<-data.frame(matrix(vec, ncol = 2, byrow = T),stringsAsFactors = F)
@@ -87,13 +88,11 @@ for(i in 1:dim(bez)[1]){
     break
   }
   rowi<-as.vector(bez[i,])
-  #print((rowi[1]))
   for(j in 1:dim(bez)[1]){
     if(j>dim(bez)[1]){
       break
     }
     rowj_sym<-c(bez[j,2], bez[j,1])
-   # print(rowj_sym[1])
     if(rowi[1]==rowj_sym[1]&& rowi[2]==rowj_sym[2] && i!=j){
       print("hier")
       bez<-bez[-c(i,j),]
@@ -109,22 +108,21 @@ startNodes<-data.frame(Startknoten="S", start=startEvents, stringsAsFactors = F)
 #Endknoten erstellen
 endNodes<-data.frame(end=endEvents, Endknoten="E", stringsAsFactors = F)
 
-bez
-#####Graph erstellen
-nodes1<-c("E", "S",unique(bez$X1, bez$X2))
-nodes<- data.frame(label=nodes1, stringsAsFactors = F)
 
+#####Graph erstellen
+nodes1<-unique(c("E", "S",unique(bez$X1, bez$X2)))
+nodes1
+nodes<- data.frame(id=nodes1, label= nodes1,color=c("red","green",rep("#CECEF6",length(nodes$id)-2)), x=c(1,rep(NULL,length(nodes$id)-1)))
+nodes
 from<- c(startNodes$Startknoten, endNodes$end,bez$X1)
 to<- c(startNodes$start, endNodes$Endknoten, bez$X2)
-edges<- data.frame(from=from, to=to, stringsAsFactors = F)
-edges
+edges<- data.frame(from=from, to=to)
 
-visNetwork(nodes,edges) %>%visEdges(arrows ="to")
-?visNetwork
 
 edges
+nodes
 
-nodes <- data.frame(id = )
-edges <- data.frame(from = c(1,2), to = c(1,3))
-
-visNetwork(nodes, edges)
+visNetwork(nodes,edges)%>%visEdges(arrows = 'to')%>%
+  visEvents(stabilizationIterationsDone="function () {this.setOptions( { physics: false } );}")
+#Position stetzen
+#http://stackoverflow.com/questions/38265713/how-to-manually-change-the-position-of-nodes-in-visnetwork-in-r
