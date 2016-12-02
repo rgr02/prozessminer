@@ -46,7 +46,8 @@ server <- function(input, output) {
                       label = labelE)
     
     visNetwork(nodes,edges) %>%visEdges(arrows ="to")%>%
-      visInteraction(dragNodes = TRUE, dragView = TRUE, zoomView = FALSE)
+      visInteraction(dragNodes = T, dragView = T, zoomView = FALSE)%>%
+      visIgraphLayout(randomSeed=1)
     
   })
   
