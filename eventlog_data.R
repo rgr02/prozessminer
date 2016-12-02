@@ -138,3 +138,4 @@ writeWorksheetToFile(srcFile, hilfstabelle, sheet = "Hilfstabelle")
 # NEXT STEPS HERE
 
 bestellNr <- unique(hilfstabelle$BestellNr)
+bestellNr
