@@ -139,3 +139,83 @@ writeWorksheetToFile(srcFile, hilfstabelle, sheet = "Hilfstabelle")
 
 bestellNr <- unique(hilfstabelle$BestellNr)
 bestellNr
+
+View(hilfstabelle)
+unique(hilfstabelle$Tabelle)
+
+table(hilfstabelle$BestellNr)
+View(hilfstabelle[which(hilfstabelle$BestellNr==600003),])
+str(hilfstabelle)
+
+eventlog<-data.frame(CaseID= 0, Timestamp= Sys.time(), Aktivitaet= "Test", Kurz="t", stringsAsFactors = F)
+str(eventlog)
+for(i in bestellNr){
+  tab<- hilfstabelle[which(hilfstabelle$BestellNr==i),]
+  
+  bestPosTS<- unique(tab$ErstellTS_Bestellpos)
+ # bestPosTS<- bestPosTS[-is.na(bestPosTS)]
+  
+  bestellTS<- unique(tab$ErstellTS_Bestellung)
+#  bestellTS<- bestellTS[-is.na(bestellTS)]
+  
+  kreditorTS<- unique(tab$ErstellTS_Kreditor)
+ # kreditorTS<- kreditorTS[-is.na(kreditorTS)]
+  
+  einRechnTS<- unique(tab$EingansDat)
+#  einRechnTS<- einRechnTS[-is.na(einRechnTS)]
+  
+  rechnungsTS<- unique(tab$RechnungsDatum)
+ # rechnungsTS<- rechnungsTS[-is.na(rechnungsTS)]
+  
+  warenEinTS<- unique(tab$EingangsTS_WAE)
+#  warenEinTS<- warenEinTS[-is.na(warenEinTS)]
+  
+  zahlTS<- unique(tab$ZahlTS_Zahlung)
+ # zahlTS<- zahlTS[-is.na(zahlTS)]
+  
+  
+  bestPosL<-rep("Bestellposition erstellt", length(bestPosTS))
+  bestPosK<-rep("b", length(bestPosTS))
+  
+  bestellL<-rep("Bestellung erstellt", length(bestellTS))
+  bestellK<-rep("d", length(bestellTS))
+  
+  kreditorL<-rep("Kreditor erstellt", length(kreditorTS))
+  kreditorK<-rep("f", length(kreditorTS))
+  
+  einRechnL<-rep("Rechnung eingegangen", length(einRechnTS))
+  einRechnK<-rep("i", length(einRechnTS))
+  
+  rechnungL<-rep("Rechnung gestellt", length(rechnungsTS))
+  rechnungK<-rep("j", length(rechnungsTS))
+  
+  wareEinL<-rep("Ware eingegangen", length(warenEinTS))
+  wareEinK<-rep("k", length(warenEinTS))
+  
+  zahlL<-rep("Zahlung durchgeführt", length(zahlTS))
+  zahlK<-rep("l", length(zahlTS))
+  
+  #####Änderungshistorie mit ifs fehlt noch
+  
+  ts<-c(bestPosTS, bestellTS, kreditorTS, einRechnTS, rechnungsTS, warenEinTS, zahlTS)
+  lang<- c(bestPosL, bestellL, kreditorL, einRechnL, rechnungL, wareEinL, zahlL)
+  kurz<- c(bestPosK, bestellK, kreditorK, einRechnK, rechnungK, wareEinK, zahlK)
+  
+  eventlog1<-data.frame(CaseID= i, Timestamp= ts, Aktivitaet= lang, Kurz= kurz, stringsAsFactors = F)
+  eventlog1_ord<- eventlog1[order(eventlog1$Timestamp),]
+  eventlog<- rbind(eventlog, eventlog1_ord)
+}
+
+#Eventlog 1. Hilfzeile löschen
+eventlog<- eventlog[-1,]
+
+#Ansehen Eventlog
+View(eventlog)
+head(eventlog,30)
+dim(eventlog)
+
+#NAs entfernen
+eventlog_ohneNA<- eventlog[-which(is.na(eventlog$Timestamp)),]
+head(eventlog_ohneNA,10)
+View(eventlog_ohneNA)
+
