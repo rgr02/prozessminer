@@ -147,8 +147,13 @@ table(hilfstabelle$BestellNr)
 View(hilfstabelle[which(hilfstabelle$BestellNr==600003),])
 str(hilfstabelle)
 
+
+#Eventlog initialisieren
 eventlog<-data.frame(CaseID= 0, Timestamp= Sys.time(), Aktivitaet= "Test", Kurz="t", stringsAsFactors = F)
 str(eventlog)
+
+#Erstellen des Eventlogs für alle BestellNummern
+
 for(i in bestellNr){
   tab<- hilfstabelle[which(hilfstabelle$BestellNr==i),]
   
