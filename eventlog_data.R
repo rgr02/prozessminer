@@ -224,3 +224,4 @@ eventlog_ohneNA<- eventlog[-which(is.na(eventlog$Timestamp)),]
 head(eventlog_ohneNA,10)
 View(eventlog_ohneNA)
 
+eventlog_ohneNA

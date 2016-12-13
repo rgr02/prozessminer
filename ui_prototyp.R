@@ -11,8 +11,8 @@ body<- dashboardBody(
     column(width=5,
            fluidRow(
              column(width=12,
-                    h5("Wähle Eventlog"),
-                    fileInput("file", label=NULL),                    
+                   # h5("Wähle Eventlog"),
+                    #fileInput("file", label=NULL),                    
                     h5("Pocess Query Language"),
                     textInput("pql", label=NULL,placeholder = "A -> B->?"),
                     h5("Beschriftung Graph"),

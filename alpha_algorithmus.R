@@ -9,7 +9,6 @@ eventlog<-data.frame(caseID,akt,stringsAsFactors = F)
 
 cases<-unique(eventlog$caseID)
 maxVar<- max(table(eventlog$caseID))
-
 varianten<- NULL
 
 for(i in 1:length(cases)){
@@ -17,16 +16,21 @@ for(i in 1:length(cases)){
   variante<- c(case$akt, rep("X", maxVar-length(case$akt)))
   varianten<- rbind(varianten, variante)
 }
-
+View(varianten)
 anzKennzahl<-NULL
+dim(varianten)
+head(varianten)
 
+#Doppelte Varianten löschen
 for(i in 1:dim(varianten)[1]){
   anz<-1
   if(i>dim(varianten)[1]){
     break
   }
-  for(j in 1:dim(varianten)[1]){
-    
+  for(j in i:dim(varianten)[1]){
+    if(j>dim(varianten)[1]){
+      break
+    }
     if(identical(varianten[i,],varianten[j,])&& i!=j){
       anz<-anz+1 
       varianten<-varianten[-j,]
@@ -34,10 +38,8 @@ for(i in 1:dim(varianten)[1]){
   }
   anzKennzahl<- c(anzKennzahl,anz)
 }
-anzKennzahl
 varianten_Anz<- cbind(varianten,anzKennzahl)
-varianten
-eventlog
+View(varianten)
 
 startEvents<- unique(varianten[,1])
 startEvents
@@ -56,7 +58,6 @@ for(i in 1:dim(varianten)[1]){
     
   }
 }
-
 #Endknoten
 end_help<-bez[which(bez[,2]=="X"),1]
 endEvents<- varianten[,dim(varianten)[2]]
@@ -70,17 +71,19 @@ bez<- bez[which(bez[,2]!="X"),]
 
 #doppelte Beziehungen entfernen
 alsWort<-unique(paste0(bez[,1],"-",bez[,2]))
-
+alsWort
 wieOftBez1<-table(paste0(bez[,1],"-",bez[,2]))
+wieOftBez1
 namesBez<-  unlist(strsplit(names(wieOftBez1), split="-"))
+namesBez
 wieOftBez<- data.frame(wieOftBez1, matrix(namesBez, ncol = 2, byrow = T),stringsAsFactors = F)
-wieOftBez
+wieOftBez<-wieOftBez[,-1]#Spalte Var1 wird gelöscht
 
 vec<-unlist(strsplit(alsWort, split="-"))
 
 bez<-data.frame(matrix(vec, ncol = 2, byrow = T),stringsAsFactors = F)
 dim(bez)
-bez
+View(bez)
 
 #symetrische Beziehung entfernen -> Abhängigkeiten
 for(i in 1:dim(bez)[1]){
@@ -112,7 +115,7 @@ endNodes<-data.frame(end=endEvents, Endknoten="E", stringsAsFactors = F)
 #####Graph erstellen
 nodes1<-unique(c("E", "S",unique(bez$X1, bez$X2)))
 nodes1
-nodes<- data.frame(id=nodes1, label= nodes1,color=c("red","green",rep("#CECEF6",length(nodes$id)-2)), x=c(1,rep(NULL,length(nodes$id)-1)))
+nodes<- data.frame(id=nodes1, label= nodes1,color=c("red","green",rep("#CECEF6",length(nodes1)-2)), x=c(1,rep(NULL,length(nodes1)-1)))
 nodes
 from<- c(startNodes$Startknoten, endNodes$end,bez$X1)
 to<- c(startNodes$start, endNodes$Endknoten, bez$X2)
