@@ -1,89 +1,142 @@
 server_proto<- function(input,output){
   
-  output$networkVis<- renderVisNetwork({
     
     varianten_Anz<- getVarianten(eventlog)
 
-    varianten<- varianten_Anz[,-dim(varianten_Anz)[2]]
+    varianten_all<- varianten_Anz[,-dim(varianten_Anz)[2]]
     
     output$abdeckung<- renderPlot({
-      anzVar<-sort(varianten_Anz[,dim(varianten_Anz)[2]],decreasing = T)
-      barplot(anzVar,col = "#58ACFA", names.arg = paste0("Var",1:length(anzVar)))
-     # anzV<-data.frame(Variante=paste0("V",1:length(anzVar)),Anzahl=anzVar, stringsAsFactors = F)
-      #print(head(anzV))
+      anzVar<-sort(varianten_Anz[,"Anzahl"],decreasing = T)
+      anzV<-data.frame(Variante=paste0("V",1:length(anzVar)),Anzahl=anzVar, stringsAsFactors = F)
+      
+      if(!is.null(input$plot_brush)){
+        start<- round(input$plot_brush$xmin)
+        end<- round(input$plot_brush$xmax)
+        col_bar<- rep("grey",length(anzVar))
+        col_bar[start:end]<-"blue"
+        varianten<- varianten_Anz[order(-varianten_Anz$Anzahl),]
+        varianten<- varianten[start:end,]
+      }else{
+        col_bar<- rep("blue",length(anzVar))
+      }
       
       
-      #g <- ggplot(anzV, aes(reorder(Variante, -Anzahl),weight= Anzahl))
-      #g + geom_bar()
+      g <- ggplot(anzV, aes(reorder(Variante, -Anzahl),weight= Anzahl))
+      g + geom_bar(fill=col_bar)
       
     })
+ 
+####Ab hier individuell von Auswahl abhängig 
     
-    startEvents<- unique(varianten[,1])
+   # startEvents<- unique(varianten[,1])
+    varianten_sub<- reactive({
+      if(!is.null(input$plot_brush)){
+        start<- round(input$plot_brush$xmin)
+        end<- round(input$plot_brush$xmax)
+        
+        varianten<- varianten_Anz[order(-varianten_Anz$Anzahl),]
+        varianten<- varianten[start:end,]
+      }else{
+        varianten<- getVarianten(eventlog)
+      }
+    })
     
     output$statistics<- renderPrint({
-      anzC<- sum(varianten_Anz[,dim(varianten_Anz)[2]])
+      varianten<- varianten_sub()
+      #print(head(varianten))
+      
+      anzC<- sum(varianten$Anzahl)
       anzV<- dim(varianten)[1]
       data.frame(row.names = c("Anzahl Cases", "Anzahl Varianten"), val= c(anzC, anzV))      
       
       
     })
     
-    ###Beziehungen
-    bez<-NULL
-    
-    for(i in 1:dim(varianten)[1]){
-      for(j in 1:(dim(varianten)[2]-1)){
-        bez_help<-c(varianten[i,j], varianten[i,j+1])
-        bez_sub<-bez[which(bez[,1]==bez_help[1]),]
-        bez_sub<- bez_sub[which(bez_sub[2]==bez_help[2])]
-        bez<-rbind(bez, bez_help)
-        
+  ##Beziehungen
+    bez_X<- reactive({
+      bez<-NULL
+      varianten<-varianten_sub()
+      varianten<- varianten[,-dim(varianten)[2]]
+      for(i in 1:dim(varianten)[1]){
+        for(j in 1:(dim(varianten)[2]-1)){
+          bez_help<-c(varianten[i,j], varianten[i,j+1])
+          bez_sub<-bez[which(bez[,1]==bez_help[1]),]
+          bez_sub<- bez_sub[which(bez_sub[2]==bez_help[2])]
+          bez<-rbind(bez, bez_help)
+          
+        }
       }
-    }
+      return(bez)
+    })#beziehungen mi A X beziehungen
     
-    #Endknoten
-    end_help<-bez[which(bez[,2]=="X"),1]
-    endEvents<- varianten[,dim(varianten)[2]]
-    endEvents<-unique(c(end_help,endEvents))
-    endEvents<- endEvents[which(endEvents!="X")]
-    
+  #   
+  #   #Endknoten
+  #   end_help<-bez[which(bez[,2]=="X"),1]
+  #   endEvents<- varianten[,dim(varianten)[2]]
+  #   endEvents<-unique(c(end_help,endEvents))
+  #   endEvents<- endEvents[which(endEvents!="X")]
+  #   
     #Beziehungen X entfernen
-    bez<- bez[which(bez[,1]!="X"),]
-    bez<- bez[which(bez[,2]!="X"),]
+    beziehungen<- reactive({
+      bez<-bez_X()
+      bez<- bez[which(bez[,1]!="X"),]
+      bez<- bez[which(bez[,2]!="X"),]
+      
+      #doppelte Beziehungen entfernen
+      alsWort<-unique(paste0(bez[,1],"-",bez[,2]))
+      wieOftBez1<-table(paste0(bez[,1],"-",bez[,2]))
+      namesBez<-  unlist(strsplit(names(wieOftBez1), split="-"))
+      wieOftBez<- data.frame(wieOftBez1, matrix(namesBez, ncol = 2, byrow = T),stringsAsFactors = F)
+      wieOftBez<- wieOftBez[-1]
+      
+      bez<-wieOftBez
+      return(bez)
+    })
     
-    
-    #doppelte Beziehungen entfernen
-    alsWort<-unique(paste0(bez[,1],"-",bez[,2]))
-    wieOftBez1<-table(paste0(bez[,1],"-",bez[,2]))
-    namesBez<-  unlist(strsplit(names(wieOftBez1), split="-"))
-    wieOftBez<- data.frame(wieOftBez1, matrix(namesBez, ncol = 2, byrow = T),stringsAsFactors = F)
-    wieOftBez<- wieOftBez[-1]
+  # 
+    output$aktivitaeten<- renderPlot({
+      bez<- beziehungen()
+      
+      anzAkt<-aggregate(bez$Freq, by=list(bez$X2), sum)
+      anzAkt<- data.frame(anzAkt)
+      barplot(anzAkt$x,names.arg = anzAkt$Group.1)
 
-    bez<-wieOftBez
-   
-    #Startpunkt erstellen
-    startNodes<-data.frame(Startknoten="S", start=startEvents, stringsAsFactors = F)
-    
-    #Endknoten erstellen
-    endNodes<-data.frame(end=endEvents, Endknoten="E", stringsAsFactors = F)
-    
-    
+      g <- ggplot(anzAkt, aes(Group.1,weight= x))
+      g + geom_bar()+
+      theme(axis.text.x=element_text(angle=30,hjust=1,vjust=0.5))
+    })
+  #   #Startpunkt erstellen
+  #   startNodes<-data.frame(Startknoten="S", start=startEvents, stringsAsFactors = F)
+  #   
+  #   #Endknoten erstellen
+  #   endNodes<-data.frame(end=endEvents, Endknoten="E", stringsAsFactors = F)
+  #   
+  #   
     #####Graph erstellen
+    output$networkVis<- renderVisNetwork({
+    bez<-beziehungen()
     nodes1<-unique(c("E", "S",unique(bez$X1, bez$X2)))
     nodes<- data.frame(id=nodes1, label= nodes1,color=c("red","green",rep("#CECEF6",length(nodes1)-2)), x=c(1,rep(NULL,length(nodes1)-1)))
-    from<- c(startNodes$Startknoten, endNodes$end,bez$X1)
-    to<- c(startNodes$start, endNodes$Endknoten, bez$X2)
-    valueE<-c(table(startEvents), table(endEvents),bez[,1])
-    valueE[which(valueE>30)]<-30
-    valueE<- c(100, valueE[-1])
-    edges<- data.frame(from=from, to=to, label=c(table(startEvents), table(endEvents),bez[,1]), value=valueE)
-   print( quantile(valueE,probs = c(0.8,0.9,0.95)))
+   # from<- c(startNodes$Startknoten, endNodes$end,bez$X1)
+    #to<- c(startNodes$start, endNodes$Endknoten, bez$X2)
+    from<- bez$X1
+    to<- bez$X2
+   # valueE<-c(table(startEvents), table(endEvents),bez[,1])
+    #valueE[which(valueE>30)]<-30
+    #valueE<- c(100, valueE[-1])
     
+    if(input$anzeige =="Dauer"){
+      labelE<-NA
+    }else{
+      labelE<- bez[,1]
+    }
+    edges<- data.frame(from=from, to=to, label=labelE)#, label=c(table(startEvents), table(endEvents),bez[,1]), value=valueE)
+    
+
     visNetwork(nodes,edges, width="100%")%>%visEdges(arrows = 'to')%>%
       visEvents(stabilizationIterationsDone="function () {this.setOptions( { physics: false } );}")%>%
       visIgraphLayout(randomSeed= 46)%>%
-    visEdges(smooth= list(enabled = TRUE, type = "horizontal"), width="100%", scaling= list(min=1, max=10))%>%
-      addFontAwesome()
+      visEdges(smooth= list(enabled = TRUE, type = "horizontal"))
   })#Network
   
   

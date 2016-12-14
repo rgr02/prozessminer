@@ -28,7 +28,7 @@ getVarianten<- function(eventlog){
     }
     anzKennzahl<- c(anzKennzahl,anz)
   }
-  varianten_Anz<- data.frame(varianten,anzKennzahl, stringsAsFactors = F)
+  varianten_Anz<- data.frame(varianten,Anzahl=anzKennzahl, stringsAsFactors = F)
   rownames(varianten_Anz)<-NULL
   return(varianten_Anz)
 }

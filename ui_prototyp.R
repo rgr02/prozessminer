@@ -31,15 +31,13 @@ body<- dashboardBody(
   fluidRow(
     column(width=7,
            h5("Abdeckung"),
-           plotOutput("abdeckung", height = "200px",
-                      click = "plot_click",
-                      dblclick = "plot_dblclick",
+           plotOutput("abdeckung", height = "250px",
                       hover = "plot_hover",
                       brush = "plot_brush")
     ),
     column(width=5,
-           h5("Aktivitäten"),
-           plotOutput("aktivitaeten", height="200px")
+           h5("Aktivitaeten"),
+           plotOutput("aktivitaeten", height="250px")
     )
   )
 )

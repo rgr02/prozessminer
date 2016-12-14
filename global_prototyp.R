@@ -15,11 +15,8 @@ srcFile <- file.choose()
 
 ################################################################################
 # ERSTELLEN DER DATAFRAMES und umbenennen von Variablen
-print("vor Kreditor")
 kreditor = readWorksheetFromFile(srcFile,sheet="Kreditor", header=T)
-print("nach Kreditor")
 aenderungsHist = readWorksheetFromFile(srcFile,sheet="Aenderungshistorie", header=T)
-print("nach aederHist")
 bestellung = readWorksheetFromFile(srcFile,sheet="Bestellung", header=T)
 bestellPos = readWorksheetFromFile(srcFile,sheet="Bestellposition", header=T)
 warenEingang = readWorksheetFromFile(srcFile,sheet="Wareneingang", header=T)
@@ -50,7 +47,6 @@ if ('True' %in% is.na(rechnung$BestellNr)) {
   rechnung<-rechnung[-no_BN_RE,]
   # Funktioniert an der Stelle. NA in Rechnung gelöscht.
 }
-?is.element
 
 if ('True' %in% is.na(bestellung$BestellNr)) {
   no_BN_BE<-which(is.na(bestellung$BestellNr))
@@ -146,22 +142,13 @@ writeWorksheetToFile(srcFile, hilfstabelle, sheet = "Hilfstabelle")
 # Eventlog erstellen
 
 bestellNr <- unique(hilfstabelle$BestellNr)
-bestellNr
 
-View(hilfstabelle)
-unique(hilfstabelle$Tabelle)
-
-table(hilfstabelle$BestellNr)
-View(hilfstabelle[which(hilfstabelle$BestellNr==600003),])
-str(hilfstabelle)
-
-
+head(hilfstabelle)
 #Eventlog initialisieren
-eventlog<-data.frame(caseID= 0, timestamp= Sys.time(), akt= "Test", kurz="t", stringsAsFactors = F)
+eventlog<-data.frame(caseID= 0, timestamp= Sys.time(), akt= "Test",  stringsAsFactors = F)
 str(eventlog)
 
 #Erstellen des Eventlogs für alle BestellNummern
-
 for(i in bestellNr){
   tab<- hilfstabelle[which(hilfstabelle$BestellNr==i),]
   
@@ -208,33 +195,63 @@ for(i in bestellNr){
   zahlL<-rep("Zahlung durchgeführt", length(zahlTS))
   zahlK<-rep("l", length(zahlTS))
   
-  #####aenderungshistorie mit ifs fehlt noch
+  tabAender<- tab[!is.na(tab$AenderTS),c("AenderTS", "Feld", "Wert_neu","Tabelle")]
+  tabAender<-tabAender[!duplicated(tabAender),]
+
+  aenderTS<-tabAender$AenderTS
+  if(dim(tabAender)[1]>0){
+    print("bin im IF Habe mindestens eine Zeile")
+    aenderL<-NULL
+    for(j in 1:dim(tabAender)[1]){
+      if(tabAender[j,"Feld"]=="Menge"){
+        aenderL<- c(aenderL, "Bestellmenge geändert")
+      }
+      if(tabAender[j,"Feld"]=="Preis"){
+        aenderL<- c(aenderL, "Preis geändert")
+      }
+      if(tabAender[j,"Feld"]=="SperrKZ" && tabAender[j,"Wert_neu"]=="X"){
+        aenderL<- c(aenderL, "Kreditor gesperrt")
+      }
+      if(tabAender[j,"Feld"]=="SperrKZ" && is.na(tabAender[j,"Wert_neu"])){
+        aenderL<- c(aenderL, "Kreditor entsperrt")
+      }
+      if(tabAender[j,"Feld"]=="StornoKZ" && tabAender[j,"Tabelle"]=="Bestellposition"){
+        aenderL<- c(aenderL, "Bestellposition storniert")
+      }
+      if(tabAender[j,"Feld"]=="StornoKZ" && tabAender[j,"Tabelle"]=="Bestellung"){
+        aenderL<- c(aenderL, "Bestellung storniert")
+      }
+    }
+
+  }
+  if(length(aenderL)!=length(aenderTS)){
+    aenderL<-NULL
+    aenderTS<-NULL
+  }else{
+    print(i)
+    print(aenderL)
+  }
+
   
-  ts<-c(bestPosTS, bestellTS, kreditorTS, einRechnTS, rechnungsTS, warenEinTS, zahlTS)
-  lang<- c(bestPosL, bestellL, kreditorL, einRechnL, rechnungL, wareEinL, zahlL)
-  kurz<- c(bestPosK, bestellK, kreditorK, einRechnK, rechnungK, wareEinK, zahlK)
+  ts<-c(bestPosTS, bestellTS, kreditorTS, einRechnTS, rechnungsTS, warenEinTS, zahlTS,aenderTS)
+  lang<- c(bestPosL, bestellL, kreditorL, einRechnL, rechnungL, wareEinL, zahlL, aenderL)
+  #kurz<- c(bestPosK, bestellK, kreditorK, einRechnK, rechnungK, wareEinK, zahlK)
   
-  eventlog1<-data.frame(caseID= i, timestamp= ts, akt= lang, kurz= kurz, stringsAsFactors = F)
+  eventlog1<-data.frame(caseID= i, timestamp= ts, akt= lang, stringsAsFactors = F)
   eventlog1_ord<- eventlog1[order(eventlog1$timestamp),]
+
   eventlog<- rbind(eventlog, eventlog1_ord)
 }
 
 #Eventlog 1. Hilfzeile löschen
 eventlog<- eventlog[-1,]
-head(eventlog)
-#Ansehen Eventlog
-View(eventlog)
-head(eventlog,30)
-dim(eventlog)
-
 #NAs entfernen
 eventlog_ohneNA<- eventlog[-which(is.na(eventlog$timestamp)),]
 eventlog<-eventlog_ohneNA
-View(eventlog)
 
 #In Exeldokument speichern
-wb_Event <- loadWorkbook(srcFile, create = T)
-createSheet(wb_Event,"Eventlog") # Name für das Arbeitsblatt
-setColumnWidth(wb_Event,"Eventlog",column = c(1:13),5000)
-saveWorkbook(wb_Event)
-writeWorksheetToFile(srcFile, eventlog, sheet = "Eventlog")
+# wb_Event <- loadWorkbook(srcFile, create = T)
+# createSheet(wb_Event,"Eventlog") # Name für das Arbeitsblatt
+# setColumnWidth(wb_Event,"Eventlog",column = c(1:13),5000)
+# saveWorkbook(wb_Event)
+# writeWorksheetToFile(srcFile, eventlog, sheet = "Eventlog")
