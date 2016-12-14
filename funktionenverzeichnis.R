@@ -17,7 +17,7 @@ getVarianten<- function(eventlog){
     if(i>dim(varianten)[1]){
       break
     }
-    for(j in 1:dim(varianten)[1]){
+    for(j in i:dim(varianten)[1]){
       if(j>dim(varianten)[1]){
         break
       }
@@ -32,3 +32,4 @@ getVarianten<- function(eventlog){
   rownames(varianten_Anz)<-NULL
   return(varianten_Anz)
 }
+

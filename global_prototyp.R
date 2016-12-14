@@ -15,8 +15,11 @@ srcFile <- file.choose()
 
 ################################################################################
 # ERSTELLEN DER DATAFRAMES und umbenennen von Variablen
+print("vor Kreditor")
 kreditor = readWorksheetFromFile(srcFile,sheet="Kreditor", header=T)
-änderungsHist = readWorksheetFromFile(srcFile,sheet="Änderungshistorie", header=T)
+print("nach Kreditor")
+aenderungsHist = readWorksheetFromFile(srcFile,sheet="Aenderungshistorie", header=T)
+print("nach aederHist")
 bestellung = readWorksheetFromFile(srcFile,sheet="Bestellung", header=T)
 bestellPos = readWorksheetFromFile(srcFile,sheet="Bestellposition", header=T)
 warenEingang = readWorksheetFromFile(srcFile,sheet="Wareneingang", header=T)
@@ -53,9 +56,9 @@ if ('True' %in% is.na(bestellung$BestellNr)) {
   no_BN_BE<-which(is.na(bestellung$BestellNr))
   bestellung<-bestellung[-no_BN_BE,]
   # Keine NA in BestellNr. 
-  # Zweite Zeile negiert und löscht alle Einträge !!
-  # Daher sind die if Abfragen notwendig um Generizität für verschiedene Input-
-  # daten zu gewährleisten.
+  # Zweite Zeile negiert und löscht alle Eintraege !!
+  # Daher sind die if Abfragen notwendig um Generizitaet für verschiedene Input-
+  # daten zu gewaehrleisten.
 }
 
 if ('True' %in% is.na(bestellPos$BestellNr)) {
@@ -76,7 +79,7 @@ if ('True' %in% is.na(zahlung$KredNr)) {
 
 ################################################################################
 # verknüpfen der Tabellen
-# Äquivalenzen zu SQL Joins in R
+# aequivalenzen zu SQL Joins in R
 # Inner Join wie Outer Join ohne , all = True
 # Outer join: merge(x = df1, y = df2, by = "CustomerId", all = TRUE)
 # Left outer: merge(x = df1, y = df2, by = "CustomerId", all.x = TRUE)
@@ -98,24 +101,24 @@ merge_bbwrz<-merge(x=merge_bbwr, y=zahlung, by.x="KredNr.x", by.y="KredNr", all.
 # Left Join mit Kreditor
 merge_bbwrzk<-merge(x=merge_bbwrz, y=kreditor, by.x="KredNr.x", by.y="KredNr", all.x = TRUE)
 
-# Änderungshistorie
+# aenderungshistorie
 # Tabelle Kreditor
-kredit<-which(änderungsHist$Tabelle == "Kreditor")
-änderungsHist_Kredit <- änderungsHist[kredit,]
-merge_bbwrzk_ak<-merge(x=merge_bbwrzk, y=änderungsHist_Kredit, by.x="KredNr.x", by.y="ID", all.x = TRUE)
+kredit<-which(aenderungsHist$Tabelle == "Kreditor")
+aenderungsHist_Kredit <- aenderungsHist[kredit,]
+merge_bbwrzk_ak<-merge(x=merge_bbwrzk, y=aenderungsHist_Kredit, by.x="KredNr.x", by.y="ID", all.x = TRUE)
 
 # Tabelle Bestellung
-bestell<-which(änderungsHist$Tabelle == "Bestellung")
-änderungsHist_bestell <- änderungsHist[bestell,]
-merge_bbwrzk_akb<-merge(x=merge_bbwrzk_ak, y=änderungsHist_bestell, by.x="BestellNr", by.y="ID", all.x = TRUE)
+bestell<-which(aenderungsHist$Tabelle == "Bestellung")
+aenderungsHist_bestell <- aenderungsHist[bestell,]
+merge_bbwrzk_akb<-merge(x=merge_bbwrzk_ak, y=aenderungsHist_bestell, by.x="BestellNr", by.y="ID", all.x = TRUE)
 
 # Tabelle Bestellposition
-# Hilfsspalte mit geänderter ID - erste Nummer weggeschnitten
-x<-substr(änderungsHist$ID,2,7)
-änderungsHist$IDTrim=x
-bestellP<-which(änderungsHist$Tabelle == "Bestellposition")
-änderungsHist_bestellP <- änderungsHist[bestellP,]
-merge_bbwrzk_akbb<-merge(x=merge_bbwrzk_akb, y=änderungsHist_bestellP, by.x="BestellNr", by.y="IDTrim", all.x = TRUE)
+# Hilfsspalte mit geaenderter ID - erste Nummer weggeschnitten
+x<-substr(aenderungsHist$ID,2,7)
+aenderungsHist$IDTrim=x
+bestellP<-which(aenderungsHist$Tabelle == "Bestellposition")
+aenderungsHist_bestellP <- aenderungsHist[bestellP,]
+merge_bbwrzk_akbb<-merge(x=merge_bbwrzk_akb, y=aenderungsHist_bestellP, by.x="BestellNr", by.y="IDTrim", all.x = TRUE)
 ################################################################################
 
 ################################################################################
@@ -140,7 +143,7 @@ writeWorksheetToFile(srcFile, hilfstabelle, sheet = "Hilfstabelle")
 ################################################################################
 
 ################################################################################
-# NEXT STEPS HERE
+# Eventlog erstellen
 
 bestellNr <- unique(hilfstabelle$BestellNr)
 bestellNr
@@ -205,7 +208,7 @@ for(i in bestellNr){
   zahlL<-rep("Zahlung durchgeführt", length(zahlTS))
   zahlK<-rep("l", length(zahlTS))
   
-  #####Änderungshistorie mit ifs fehlt noch
+  #####aenderungshistorie mit ifs fehlt noch
   
   ts<-c(bestPosTS, bestellTS, kreditorTS, einRechnTS, rechnungsTS, warenEinTS, zahlTS)
   lang<- c(bestPosL, bestellL, kreditorL, einRechnL, rechnungL, wareEinL, zahlL)
@@ -227,3 +230,11 @@ dim(eventlog)
 #NAs entfernen
 eventlog_ohneNA<- eventlog[-which(is.na(eventlog$timestamp)),]
 eventlog<-eventlog_ohneNA
+View(eventlog)
+
+#In Exeldokument speichern
+wb_Event <- loadWorkbook(srcFile, create = T)
+createSheet(wb_Event,"Eventlog") # Name für das Arbeitsblatt
+setColumnWidth(wb_Event,"Eventlog",column = c(1:13),5000)
+saveWorkbook(wb_Event)
+writeWorksheetToFile(srcFile, eventlog, sheet = "Eventlog")

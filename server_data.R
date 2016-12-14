@@ -8,13 +8,13 @@ server_proto<- function(input,output){
     
     output$abdeckung<- renderPlot({
       anzVar<-sort(varianten_Anz[,dim(varianten_Anz)[2]],decreasing = T)
-      #barplot(anzVar,col = "#58ACFA", names.arg = paste0("Var",1:length(anzVar)))
-      anzV<-data.frame(Variante=paste0("V",1:length(anzVar)),Anzahl=anzVar, stringsAsFactors = F)
-      print(head(anzV))
+      barplot(anzVar,col = "#58ACFA", names.arg = paste0("Var",1:length(anzVar)))
+     # anzV<-data.frame(Variante=paste0("V",1:length(anzVar)),Anzahl=anzVar, stringsAsFactors = F)
+      #print(head(anzV))
       
       
-      g <- ggplot(anzV, aes(reorder(Variante, -Anzahl),weight= Anzahl))
-      g + geom_bar()
+      #g <- ggplot(anzV, aes(reorder(Variante, -Anzahl),weight= Anzahl))
+      #g + geom_bar()
       
     })
     
@@ -73,13 +73,17 @@ server_proto<- function(input,output){
     nodes<- data.frame(id=nodes1, label= nodes1,color=c("red","green",rep("#CECEF6",length(nodes1)-2)), x=c(1,rep(NULL,length(nodes1)-1)))
     from<- c(startNodes$Startknoten, endNodes$end,bez$X1)
     to<- c(startNodes$start, endNodes$Endknoten, bez$X2)
-    edges<- data.frame(from=from, to=to, label=c(table(startEvents), table(endEvents),bez[,1]))
+    valueE<-c(table(startEvents), table(endEvents),bez[,1])
+    valueE[which(valueE>30)]<-30
+    valueE<- c(100, valueE[-1])
+    edges<- data.frame(from=from, to=to, label=c(table(startEvents), table(endEvents),bez[,1]), value=valueE)
+   print( quantile(valueE,probs = c(0.8,0.9,0.95)))
     
-    
-    visNetwork(nodes,edges)%>%visEdges(arrows = 'to')%>%
+    visNetwork(nodes,edges, width="100%")%>%visEdges(arrows = 'to')%>%
       visEvents(stabilizationIterationsDone="function () {this.setOptions( { physics: false } );}")%>%
-      visIgraphLayout(randomSeed= 3)
-    
+      visIgraphLayout(randomSeed= 46)%>%
+    visEdges(smooth= list(enabled = TRUE, type = "horizontal"), width="100%", scaling= list(min=1, max=10))%>%
+      addFontAwesome()
   })#Network
   
   
