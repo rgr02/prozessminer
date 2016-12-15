@@ -33,3 +33,4 @@ getVarianten<- function(eventlog){
   return(varianten_Anz)
 }
 
+

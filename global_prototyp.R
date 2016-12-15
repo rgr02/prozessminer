@@ -8,7 +8,7 @@ library(XLConnect)
 library(edeaR)
 library(visNetwork)
 library(ggplot2)
-
+library(corrplot)
 #Eventlog unserer Daten
 srcFile <- file.choose()
 #############################################################################
@@ -131,11 +131,11 @@ hilfstabelle <- merge_bbwrzk_akbb[,spalten]
 # workbook anscheinend für createSheet benötigt.
 
 # Implementierung laut Doku
-wb <- loadWorkbook(srcFile, create = T)
-createSheet(wb,"Hilfstabelle") # Name für das Arbeitsblatt
-setColumnWidth(wb,"Hilfstabelle",column = c(1:13),5000)
-saveWorkbook(wb)
-writeWorksheetToFile(srcFile, hilfstabelle, sheet = "Hilfstabelle") 
+# wb <- loadWorkbook(srcFile, create = T)
+# createSheet(wb,"Hilfstabelle") # Name für das Arbeitsblatt
+# setColumnWidth(wb,"Hilfstabelle",column = c(1:13),5000)
+# saveWorkbook(wb)
+# writeWorksheetToFile(srcFile, hilfstabelle, sheet = "Hilfstabelle") 
 ################################################################################
 
 ################################################################################
@@ -199,9 +199,10 @@ for(i in bestellNr){
   tabAender<-tabAender[!duplicated(tabAender),]
 
   aenderTS<-tabAender$AenderTS
+  aenderL<-NULL
+  
   if(dim(tabAender)[1]>0){
     print("bin im IF Habe mindestens eine Zeile")
-    aenderL<-NULL
     for(j in 1:dim(tabAender)[1]){
       if(tabAender[j,"Feld"]=="Menge"){
         aenderL<- c(aenderL, "Bestellmenge geändert")
@@ -227,9 +228,6 @@ for(i in bestellNr){
   if(length(aenderL)!=length(aenderTS)){
     aenderL<-NULL
     aenderTS<-NULL
-  }else{
-    print(i)
-    print(aenderL)
   }
 
   
@@ -248,7 +246,6 @@ eventlog<- eventlog[-1,]
 #NAs entfernen
 eventlog_ohneNA<- eventlog[-which(is.na(eventlog$timestamp)),]
 eventlog<-eventlog_ohneNA
-
 #In Exeldokument speichern
 # wb_Event <- loadWorkbook(srcFile, create = T)
 # createSheet(wb_Event,"Eventlog") # Name für das Arbeitsblatt

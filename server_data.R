@@ -28,7 +28,6 @@ server_proto<- function(input,output){
  
 ####Ab hier individuell von Auswahl abhängig 
     
-   # startEvents<- unique(varianten[,1])
     varianten_sub<- reactive({
       if(!is.null(input$plot_brush)){
         start<- round(input$plot_brush$xmin)
@@ -69,13 +68,22 @@ server_proto<- function(input,output){
       return(bez)
     })#beziehungen mi A X beziehungen
     
-  #   
-  #   #Endknoten
-  #   end_help<-bez[which(bez[,2]=="X"),1]
-  #   endEvents<- varianten[,dim(varianten)[2]]
-  #   endEvents<-unique(c(end_help,endEvents))
-  #   endEvents<- endEvents[which(endEvents!="X")]
-  #   
+   
+    
+    startEvents<- reactive({
+      varianten<- varianten_sub()
+      startEvents<- unique(varianten[,1])
+    })
+
+    endEvents<-reactive({
+      varianten<- varianten_sub()
+      varianten<- varianten[,-dim(varianten)[2]]
+      bez<- bez_X()
+      end_help<-bez[which(bez[,2]=="X"),1]
+      endEvents<- varianten[,dim(varianten)[2]]
+      endEvents<-unique(c(end_help,endEvents))
+      endEvents<- endEvents[which(endEvents!="X")]
+    })
     #Beziehungen X entfernen
     beziehungen<- reactive({
       bez<-bez_X()
@@ -105,32 +113,34 @@ server_proto<- function(input,output){
       g + geom_bar()+
       theme(axis.text.x=element_text(angle=30,hjust=1,vjust=0.5))
     })
-  #   #Startpunkt erstellen
-  #   startNodes<-data.frame(Startknoten="S", start=startEvents, stringsAsFactors = F)
-  #   
-  #   #Endknoten erstellen
-  #   endNodes<-data.frame(end=endEvents, Endknoten="E", stringsAsFactors = F)
-  #   
-  #   
+
     #####Graph erstellen
     output$networkVis<- renderVisNetwork({
     bez<-beziehungen()
+    startEvents<-startEvents()
+    endEvents<- endEvents()
+    #Startpunkt erstellen
+    startNodes<-data.frame(Startknoten="S", start=startEvents, stringsAsFactors = F)
+    
+    #Endknoten erstellen
+    endNodes<-data.frame(end=endEvents, Endknoten="E", stringsAsFactors = F)
+    
+    
     nodes1<-unique(c("E", "S",unique(bez$X1, bez$X2)))
     nodes<- data.frame(id=nodes1, label= nodes1,color=c("red","green",rep("#CECEF6",length(nodes1)-2)), x=c(1,rep(NULL,length(nodes1)-1)))
-   # from<- c(startNodes$Startknoten, endNodes$end,bez$X1)
-    #to<- c(startNodes$start, endNodes$Endknoten, bez$X2)
-    from<- bez$X1
-    to<- bez$X2
-   # valueE<-c(table(startEvents), table(endEvents),bez[,1])
+    from<- c(startNodes$Startknoten, endNodes$end,bez$X1)
+    to<- c(startNodes$start, endNodes$Endknoten, bez$X2)
+   
+    #valueE<-c(table(startEvents), table(endEvents),bez[,1])
     #valueE[which(valueE>30)]<-30
     #valueE<- c(100, valueE[-1])
     
     if(input$anzeige =="Dauer"){
       labelE<-NA
     }else{
-      labelE<- bez[,1]
+      labelE<- c(table(startEvents), table(endEvents),bez[,1])
     }
-    edges<- data.frame(from=from, to=to, label=labelE)#, label=c(table(startEvents), table(endEvents),bez[,1]), value=valueE)
+    edges<- data.frame(from=from, to=to,label=labelE)#, value=valueE)
     
 
     visNetwork(nodes,edges, width="100%")%>%visEdges(arrows = 'to')%>%
@@ -139,6 +149,14 @@ server_proto<- function(input,output){
       visEdges(smooth= list(enabled = TRUE, type = "horizontal"))
   })#Network
   
+    ######Nur zur Veranschaulichung
+    output$matrix<- renderPrint({
+      zz<- runif(13*13, min=0, max=1)
+      m<-matrix(round(zz,2), ncol = 13, nrow=13)
+      m1<-as.data.frame(m)
+      
+      print(m1)
+    })
   
 }
 
