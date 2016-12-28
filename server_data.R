@@ -140,7 +140,7 @@ server_proto<- function(input,output){
     }else{
       labelE<- c(table(startEvents), table(endEvents),bez[,1])
     }
-    edges<- data.frame(from=from, to=to,label=labelE, value=valueE)
+    edges<- data.frame(from=from, to=to,label=labelE)#, value=valueE)
     
 
     visNetwork(nodes,edges, width="100%")%>%visEdges(arrows = 'to')%>%
@@ -149,16 +149,37 @@ server_proto<- function(input,output){
       visEdges(smooth= list(enabled = TRUE, type = "vertical"))
   })#Network
   
-    ######Nur zur Veranschaulichung
     output$matrix<- renderPrint({
       
+      varianten<- varianten_sub()
+      bez<- beziehungen()
       
+      akt<- unique(c(bez$X1, bez$X2))
       
-      # zz<- runif(14*14, min=0, max=1)
-      # m<-matrix(round(zz,2), ncol = 14, nrow=14)
-      # m1<-as.data.frame(m)
-      # 
-      # print(m1)
+      matrixHelp<- NULL
+      for(i in 1: dim(varianten)[1]){
+        var_einzel<- varianten[i,]
+        
+        codierung01<-as.numeric(akt%in%var_einzel)
+        matrixHelp<- rbind(matrixHelp, codierung01)
+      }
+      colnames(matrixHelp)<-akt
+      
+      zh_matrix<-NULL
+      for(j in 1:dim(matrixHelp)[2]){
+       var<- matrixHelp[which(matrixHelp[,j]!=0),]
+       
+       if(is.na(var)){
+         zh_matrix<- rbind(zh_matrix, rep(0, dim(matrixHelp)[2]))
+         
+       }else{
+         sums<-colSums(var)
+         zh_matrix<- rbind(zh_matrix,sums/sums[j])
+         
+       }
+       
+      }
+      print(zh_matrix)
     })
   
 }

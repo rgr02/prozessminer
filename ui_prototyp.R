@@ -10,13 +10,15 @@ body<- dashboardBody(
     ),
     column(width=5,
            fluidRow(
-             column(width=12,
+             column(width=6,
                    # h5("Wähle Eventlog"),
                     #fileInput("file", label=NULL),                    
                     h4("Pocess Query Language"),
                     textInput("pql", label=NULL,placeholder = "A -> B->?"),
                     h4("Beschriftung Graph"),
-                    radioButtons("anzeige", label=NULL, choices = c("Dauer", "Anzahl"),inline = T))
+                    radioButtons("anzeige", label=NULL, choices = c("Dauer", "Anzahl"),inline = T)),
+             column(width=6,
+                    helpText("A= Bestellmenge geändert"))
            ),#row 
            fluidRow(
              column(width=12,
