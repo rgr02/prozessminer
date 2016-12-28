@@ -131,31 +131,34 @@ server_proto<- function(input,output){
     from<- c(startNodes$Startknoten, endNodes$end,bez$X1)
     to<- c(startNodes$start, endNodes$Endknoten, bez$X2)
    
-    #valueE<-c(table(startEvents), table(endEvents),bez[,1])
-    #valueE[which(valueE>30)]<-30
-    #valueE<- c(100, valueE[-1])
+    valueE<-c(table(startEvents), table(endEvents),bez[,1])
+    valueE[which(valueE>30)]<-30
+    valueE<- c(100, valueE[-1])
     
     if(input$anzeige =="Dauer"){
       labelE<-NA
     }else{
       labelE<- c(table(startEvents), table(endEvents),bez[,1])
     }
-    edges<- data.frame(from=from, to=to,label=labelE)#, value=valueE)
+    edges<- data.frame(from=from, to=to,label=labelE, value=valueE)
     
 
     visNetwork(nodes,edges, width="100%")%>%visEdges(arrows = 'to')%>%
       visEvents(stabilizationIterationsDone="function () {this.setOptions( { physics: false } );}")%>%
       visIgraphLayout(randomSeed= 46)%>%
-      visEdges(smooth= list(enabled = TRUE, type = "horizontal"))
+      visEdges(smooth= list(enabled = TRUE, type = "vertical"))
   })#Network
   
     ######Nur zur Veranschaulichung
     output$matrix<- renderPrint({
-      zz<- runif(13*13, min=0, max=1)
-      m<-matrix(round(zz,2), ncol = 13, nrow=13)
-      m1<-as.data.frame(m)
       
-      print(m1)
+      
+      
+      # zz<- runif(14*14, min=0, max=1)
+      # m<-matrix(round(zz,2), ncol = 14, nrow=14)
+      # m1<-as.data.frame(m)
+      # 
+      # print(m1)
     })
   
 }

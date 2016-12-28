@@ -252,3 +252,4 @@ eventlog<-eventlog_ohneNA
 # setColumnWidth(wb_Event,"Eventlog",column = c(1:13),5000)
 # saveWorkbook(wb_Event)
 # writeWorksheetToFile(srcFile, eventlog, sheet = "Eventlog")
+str(eventlog)
