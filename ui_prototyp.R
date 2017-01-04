@@ -17,8 +17,22 @@ body<- dashboardBody(
                     textInput("pql", label=NULL,placeholder = "A -> B->?"),
                     h4("Beschriftung Graph"),
                     radioButtons("anzeige", label=NULL, choices = c("Dauer", "Anzahl"),inline = T)),
-             column(width=6,
-                    helpText("A= Bestellmenge geändert"))
+             column(width=3,
+                    h6("A= Bestellmenge geaendert"),
+                    h6("B= Bestellposition erstellt"),
+                    h6("C=Bestellposition storniert"),
+                    h6("D=Bestellung erstellt"),
+                    h6("E=Bestellung freigegeben"),
+                    h6("F=Kreditor erstellt"),
+                    h6("G=Kreditor gesperrt")),
+             column(width=3,
+                    h6("H=Preis geaendert"),
+                    h6("I=Rechnung eingegangen"),
+                    h6("J=Rechnung gestellt"),
+                    h6("K=Ware eingegangen"),
+                    h6("L=Zahlung durchgefuehrt"),
+                    h6("M=Kreditor entsperrt"),
+                    h6("N=Bestellung storniert"))
            ),#row 
            fluidRow(
              column(width=12,

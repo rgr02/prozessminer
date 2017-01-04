@@ -192,7 +192,7 @@ for(i in bestellNr){
   wareEinL<-rep("Ware eingegangen", length(warenEinTS))
   wareEinK<-rep("k", length(warenEinTS))
   
-  zahlL<-rep("Zahlung durchgeführt", length(zahlTS))
+  zahlL<-rep("Zahlung durchgefuehrt", length(zahlTS))
   zahlK<-rep("l", length(zahlTS))
   
   tabAender<- tab[!is.na(tab$AenderTS),c("AenderTS", "Feld", "Wert_neu","Tabelle")]
@@ -208,7 +208,7 @@ for(i in bestellNr){
         aenderL<- c(aenderL, "Bestellmenge geändert")
       }
       if(tabAender[j,"Feld"]=="Preis"){
-        aenderL<- c(aenderL, "Preis geändert")
+        aenderL<- c(aenderL, "Preis geaendert")
       }
       if(tabAender[j,"Feld"]=="SperrKZ" && tabAender[j,"Wert_neu"]=="X"){
         aenderL<- c(aenderL, "Kreditor gesperrt")
