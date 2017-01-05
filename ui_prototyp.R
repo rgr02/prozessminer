@@ -14,7 +14,8 @@ body<- dashboardBody(
                    # h5("Wähle Eventlog"),
                     #fileInput("file", label=NULL),                    
                     h4("Pocess Query Language"),
-                    textInput("pql", label=NULL,placeholder = "A -> B->?"),
+                    textInput("pql", label=NULL,placeholder = "A -> B->*"),
+                    actionButton("pqlButton",label="Subset"),
                     h4("Beschriftung Graph"),
                     radioButtons("anzeige", label=NULL, choices = c("Dauer", "Anzahl"),inline = T)),
              column(width=3,
@@ -36,10 +37,18 @@ body<- dashboardBody(
            ),#row 
            fluidRow(
              column(width=12,
-                    h4("Statistics"),
-                    verbatimTextOutput("statistics"),
-                    h4("Matrix"),
-                    verbatimTextOutput("matrix"))
+                    fluidRow(
+                      column(width=6,
+                             h4("Statistics"),
+                             tableOutput("statistics")),
+                      column(width=6,
+                             h4("Zusammenhangsmatrix"),
+                             uiOutput("select_matrix"),
+                             tableOutput("matrix")) )
+                    )#row
+                    
+                    
+                    #verbatimTextOutput("matrix"))
                     #plotOutput("matrix"))
            )
     )

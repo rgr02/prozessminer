@@ -34,7 +34,7 @@ server_proto<- function(input,output){
  
 ####Ab hier individuell von Auswahl abhängig 
     
-    varianten_sub<- reactive({
+    varianten_sub_act<- reactive({
       if(!is.null(input$plot_brush)){
         start<- round(input$plot_brush$xmin)
         end<- round(input$plot_brush$xmax)
@@ -42,17 +42,39 @@ server_proto<- function(input,output){
         varianten<- varianten_Anz[order(-varianten_Anz$Anzahl),]
         varianten<- varianten[start:end,]
       }else{
+        print(input$pql)
         varianten<- getVarianten(eventlog)
       }
     })
     
+    varianten_sub_pql<-eventReactive(input$pqlButton,{
+      varianten<-varianten_sub_act()
+      eingabe<-unlist(strsplit(input$pql,"->"))
+      print("joer")
+      print(eingabe)
+      for(i in 1:length(eingabe)){
+        if(eingabe[i]!="*"){
+          varianten<-varianten[which(varianten[,i]==eingabe[i]),]
+          
+        }
+      }
+      print(varianten)
+    })
+    
+    varianten_sub<-reactive({
+      if(input$pql==""){
+        varianten_sub_act()
+      }else{
+        varianten_sub_pql()
+      }
+    })
   
-    output$statistics<- renderPrint({
+    output$statistics<- renderTable({
       varianten<- varianten_sub()
 
       anzC<- sum(varianten$Anzahl)
       anzV<- dim(varianten)[1]
-      data.frame(row.names = c("Anzahl Cases", "Anzahl Varianten"), val= c(anzC, anzV))      
+      data.frame(Variable = c("Anzahl Cases", "Anzahl Varianten"), val= c(anzC, anzV))      
       
       
     })
@@ -83,20 +105,40 @@ server_proto<- function(input,output){
     
     startEvents<- reactive({
       varianten<- varianten_sub()
-      startEvents<- unique(varianten[,1])
+      startEvents<-aggregate(varianten$Anzahl, by=list(varianten[,1]),sum)
+      colnames(startEvents)<- c("akt","anz")
+      #startEvents<- table(varianten[,1])
       return(startEvents)
     })
 
     endEvents<-reactive({
       varianten<- varianten_sub()
+      #anzVar<-varianten[,dim(varianten)[2]]
+      
       varianten<- varianten[,-dim(varianten)[2]]
       bez<- bez_X()
+      end_help_anz<-bez[which(bez[,2]=="X"),3]
+      
       bez<-bez[,-dim(bez)[2]]
       end_help<-bez[which(bez[,2]=="X"),1]
+      
+      anzEnd<-aggregate(end_help_anz, by=list(end_help),sum)
+      anzEnd<-anzEnd[-which(anzEnd[,1]=="X"),]
       endEvents<- varianten[,dim(varianten)[2]]
-     
-      endEvents<-unique(c(end_help,endEvents))
-      endEvents<- endEvents[which(endEvents!="X")]
+      
+      anzEnd_2<-table(endEvents)
+      anzEnd_2_akt<-names(anzEnd_2)
+      
+      for(i in 1:length(anzEnd_2)){
+        if(anzEnd_2_akt[i]%in%anzEnd[,1]){
+          anzEnd[which(anzEnd[,1]==anzEnd_2_akt[i]),2]<-anzEnd[which(anzEnd[,1]==anzEnd_2_akt[i]),2]+anzEnd_2[i]
+        }
+      }
+      colnames(anzEnd)<-c("akt","anz")
+      endEvents<-anzEnd
+      
+      #endEvents<-unique(c(end_help,endEvents))
+      #endEvents<- endEvents[which(endEvents!="X")]
       return(endEvents)
     })
     #Beziehungen X entfernen
@@ -120,12 +162,13 @@ server_proto<- function(input,output){
   
     output$aktivitaeten<- renderPlot({
       bez<- beziehungen()
-      
+      start<- startEvents()
       anzAkt<-aggregate(bez$anz, by=list(bez$X2), sum)
+      colnames(anzAkt)<-c("akt", "anz")
       anzAkt<- data.frame(anzAkt)
-      barplot(anzAkt$x,names.arg = anzAkt$Group.1)
+      anzAkt<-rbind(anzAkt,start)
 
-      g <- ggplot(anzAkt, aes(Group.1,weight= x))
+      g <- ggplot(anzAkt, aes(akt,weight= anz))
       g + geom_bar()+
       theme(axis.text.x=element_text(angle=30,hjust=1,vjust=0.5))
     })
@@ -134,28 +177,33 @@ server_proto<- function(input,output){
     output$networkVis<- renderVisNetwork({
     bez<-beziehungen()
     
-    startEvents<-startEvents()
-    endEvents<- endEvents()
+    start<-startEvents()
+    startEvents<-start$akt
+    anzStart<-start$anz
+    
+    end<- endEvents()
+    anzEnd<- end$anz
+    endEvents<-end$akt
     #Startpunkt erstellen
-    startNodes<-data.frame(Startknoten="S", start=startEvents, stringsAsFactors = F)
+    startNodes<-data.frame(Startknoten="Start", start=startEvents, stringsAsFactors = F)
     
     #Endknoten erstellen
-    endNodes<-data.frame(end=endEvents, Endknoten="E", stringsAsFactors = F)
+    endNodes<-data.frame(end=endEvents, Endknoten="End", stringsAsFactors = F)
     
     
-    nodes1<-unique(c("E", "S",unique(bez$X1, bez$X2)))
+    nodes1<-unique(c("End", "Start",unique(bez$X1, bez$X2)))
     nodes<- data.frame(id=nodes1, label= nodes1,color=c("red","green",rep("#CECEF6",length(nodes1)-2)), x=c(1,rep(NULL,length(nodes1)-1)))
     from<- c(startNodes$Startknoten, endNodes$end,bez$X1)
     to<- c(startNodes$start, endNodes$Endknoten, bez$X2)
     
-    valueE<-c(table(startEvents), table(endEvents),bez$anz)
+    valueE<-c(table(startEvents), anzEnd,bez$anz)
     valueE[which(valueE>30)]<-30
     valueE<- c(100, valueE[-1])
     
     if(input$anzeige =="Dauer"){
       labelE<-NA
     }else{
-      labelE<- c(table(startEvents), table(endEvents),bez[,3])
+      labelE<- c(anzStart, anzEnd,bez[,3])
     }
     edges<- data.frame(from=from, to=to,label=labelE)#, value=valueE)
     
@@ -166,12 +214,20 @@ server_proto<- function(input,output){
       visEdges(smooth= list(enabled = TRUE, type = "vertical"))
   })#Network
   
-    output$matrix<- renderPrint({
+    output$select_matrix<- renderUI({
+      bez<- beziehungen()
+      
+      akt<- unique(c(bez$X1, bez$X2))
+      selectInput("selectAkt",label=NULL, choices=akt)
+    })
+    output$matrix<- renderTable({
       
       varianten<- varianten_sub()
       bez<- beziehungen()
       
       akt<- unique(c(bez$X1, bez$X2))
+      
+      
       matrixHelp<- NULL
       for(i in 1: dim(varianten)[1]){
         var_einzel<- varianten[i,]
@@ -183,7 +239,9 @@ server_proto<- function(input,output){
       rownames(matrixHelp)<-NULL
 
       if(dim(matrixHelp)[1]==1){
-        zh_matrix<-matrixHelp
+
+        zh_matrix<-data.frame(Aktivitaet=colnames(matrixHelp),Prozent=paste0(matrixHelp[1,]*100,"%"))
+        
       }else{
         zh_matrix<-NULL
         for(j in 1:dim(matrixHelp)[2]){
@@ -194,13 +252,18 @@ server_proto<- function(input,output){
             
           }else{
             sums<-colSums(as.matrix(var,nrow=1))
-            zh_matrix<- rbind(zh_matrix,round(sums/sums[j],2))
+            zh_matrix<- rbind(zh_matrix,round(100*sums/sums[j],2))
           }
       }
+        
       
-       
+        rownames(zh_matrix)<-akt
+        
+        zh_matrix<- zh_matrix[input$selectAkt,]
+        zh_matrix<- data.frame(Aktivität=akt,Prozent=paste(zh_matrix,"%"))
+         
       }
-      print(zh_matrix)
+      zh_matrix
     })
   
 }
