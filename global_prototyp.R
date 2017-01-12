@@ -205,7 +205,7 @@ for(i in bestellNr){
     print("bin im IF Habe mindestens eine Zeile")
     for(j in 1:dim(tabAender)[1]){
       if(tabAender[j,"Feld"]=="Menge"){
-        aenderL<- c(aenderL, "Bestellmenge geändert")
+        aenderL<- c(aenderL, "Bestellmenge geaendert")
       }
       if(tabAender[j,"Feld"]=="Preis"){
         aenderL<- c(aenderL, "Preis geaendert")

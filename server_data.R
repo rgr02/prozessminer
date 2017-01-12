@@ -49,24 +49,56 @@ server_proto<- function(input,output){
     
     varianten_sub_pql<-eventReactive(input$pqlButton,{
       varianten<-varianten_sub_act()
-      eingabe<-unlist(strsplit(input$pql,"->"))
+      eingabe<-gsub(" ", "", input$pql, fixed = TRUE)
+      eingabe<-unlist(strsplit(eingabe,"->"))
+      eingabe[which(eingabe=="*")]<-"[a-z]*"
+      eingabe<- paste(eingabe, collapse="")
+      eingabe<-tolower(eingabe)
       print("joer")
       print(eingabe)
-      for(i in 1:length(eingabe)){
-        if(eingabe[i]!="*"){
-          varianten<-varianten[which(varianten[,i]==eingabe[i]),]
-          
-        }
+      varWort<-NULL
+      
+      for(i in 1:dim(varianten)[1]){
+        var_ohne_space<-gsub(" ","", varianten[i,], fixed = T)
+        wort<-paste(var_ohne_space, collapse = "")
+        varWort<-c(varWort,wort)
       }
-      print(varianten)
+      varWort<-tolower(varWort)
+      rows<-grep(eingabe, varWort, perl=TRUE, value=FALSE)
+      print(varWort)
+      print(rows)
+      varianten<- varianten[rows,]
+      # for(i in 1:length(eingabe)){
+      #   if(eingabe[i]!="*"& eingabe[i]!="?"){
+      #     var_ohne_space<-gsub(" ","", varianten[,i], fixed = T)
+      #     varianten<-varianten[which(var_ohne_space==eingabe[i]),]
+      #   }
+        # if(eingabe[i]=="?"){
+        #   index<-which(varianten==eingabe[i+1], arr.ind=TRUE)
+        #   index<- index[which(index$col)>i,]
+        # }
+      #}
+      #print(varianten)
     })
     
-    varianten_sub<-reactive({
+    varianten_sub<-eventReactive(input$pqlButton,{
+      output$pqlWarning<-renderText({
+        
+      })
       if(input$pql==""){
         varianten_sub_act()
       }else{
-        varianten_sub_pql()
+        subpql<-varianten_sub_pql()
+        if(dim(subpql)[1]==0){
+          output$pqlWarning<-renderText({
+            "Keine Varianten mit dieser Auswahl -> Gesamtes Dashboard mit Auswahl in Abdeckung wird angezeigt"
+          })
+          varianten_sub_act()
+        }else{
+          return(subpql)
+        }
       }
+      
     })
   
     output$statistics<- renderTable({
@@ -260,7 +292,7 @@ server_proto<- function(input,output){
         rownames(zh_matrix)<-akt
         
         zh_matrix<- zh_matrix[input$selectAkt,]
-        zh_matrix<- data.frame(Aktivität=akt,Prozent=paste(zh_matrix,"%"))
+        zh_matrix<- data.frame(Aktivitaet=akt,Prozent=paste(zh_matrix,"%"))
          
       }
       zh_matrix
