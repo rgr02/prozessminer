@@ -146,28 +146,36 @@ server_proto<- function(input,output){
     endEvents<-reactive({
       varianten<- varianten_sub()
       #anzVar<-varianten[,dim(varianten)[2]]
-      
+      var_anz<-varianten[,dim(varianten)[2]]
       varianten<- varianten[,-dim(varianten)[2]]
       bez<- bez_X()
       end_help_anz<-bez[which(bez[,2]=="X"),3]
       
       bez<-bez[,-dim(bez)[2]]
       end_help<-bez[which(bez[,2]=="X"),1]
-      
-      anzEnd<-aggregate(end_help_anz, by=list(end_help),sum)
-      anzEnd<-anzEnd[-which(anzEnd[,1]=="X"),]
-      endEvents<- varianten[,dim(varianten)[2]]
-      
-      anzEnd_2<-table(endEvents)
-      anzEnd_2_akt<-names(anzEnd_2)
-      
-      for(i in 1:length(anzEnd_2)){
-        if(anzEnd_2_akt[i]%in%anzEnd[,1]){
-          anzEnd[which(anzEnd[,1]==anzEnd_2_akt[i]),2]<-anzEnd[which(anzEnd[,1]==anzEnd_2_akt[i]),2]+anzEnd_2[i]
+      if(dim(varianten)[1]==1 & varianten[1,dim(varianten)[2]]!="X"){
+        endEvents<- data.frame(akt=varianten[1,dim(varianten)[2]],anz=var_anz, stringsAsFactors = F)
+        print("------END")
+        print(varianten[1,dim(varianten)[2]])
+        print(var_anz)
+        print(endEvents)
+        }else{
+        anzEnd<-aggregate(end_help_anz, by=list(end_help),sum)
+        anzEnd<-anzEnd[-which(anzEnd[,1]=="X"),]
+        endEvents<- varianten[,dim(varianten)[2]]
+        
+        anzEnd_2<-table(endEvents)
+        anzEnd_2_akt<-names(anzEnd_2)
+        
+        for(i in 1:length(anzEnd_2)){
+          if(anzEnd_2_akt[i]%in%anzEnd[,1]){
+            anzEnd[which(anzEnd[,1]==anzEnd_2_akt[i]),2]<-anzEnd[which(anzEnd[,1]==anzEnd_2_akt[i]),2]+anzEnd_2[i]
+          }
         }
+        colnames(anzEnd)<-c("akt","anz")
+        endEvents<-anzEnd
       }
-      colnames(anzEnd)<-c("akt","anz")
-      endEvents<-anzEnd
+      
       
       #endEvents<-unique(c(end_help,endEvents))
       #endEvents<- endEvents[which(endEvents!="X")]
@@ -216,6 +224,7 @@ server_proto<- function(input,output){
     end<- endEvents()
     anzEnd<- end$anz
     endEvents<-end$akt
+    print(endEvents)
     #Startpunkt erstellen
     startNodes<-data.frame(Startknoten="Start", start=startEvents, stringsAsFactors = F)
     
@@ -223,7 +232,7 @@ server_proto<- function(input,output){
     endNodes<-data.frame(end=endEvents, Endknoten="End", stringsAsFactors = F)
     
     
-    nodes1<-unique(c("End", "Start",unique(bez$X1, bez$X2)))
+    nodes1<-unique(c("End", "Start",startEvents, endEvents,unique(bez$X1, bez$X2)))
     nodes<- data.frame(id=nodes1, label= nodes1,color=c("red","green",rep("#CECEF6",length(nodes1)-2)), x=c(1,rep(NULL,length(nodes1)-1)))
     from<- c(startNodes$Startknoten, endNodes$end,bez$X1)
     to<- c(startNodes$start, endNodes$Endknoten, bez$X2)
