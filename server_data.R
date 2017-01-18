@@ -206,8 +206,10 @@ server_proto<- function(input,output){
       anzAkt<-aggregate(bez$anz, by=list(bez$X2), sum)
       colnames(anzAkt)<-c("akt", "anz")
       anzAkt<- data.frame(anzAkt)
-      anzAkt<-rbind(anzAkt,start)
-
+      anzAkt<-data.frame(rbind(anzAkt,start))
+      
+      anzAkt<-transform(anzAkt, akt=reorder(akt,-anz))
+      
       g <- ggplot(anzAkt, aes(akt,weight= anz))
       g + geom_bar()+
       theme(axis.text.x=element_text(angle=30,hjust=1,vjust=0.5))

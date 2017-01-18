@@ -7,6 +7,7 @@ library(visNetwork)
 library(XLConnect)
 #library(edeaR)
 library(ggplot2)
+library(plyr)
 #library(corrplot)
 #library(DT)
 #Eventlog unserer Daten
@@ -96,18 +97,18 @@ merge_bbwrz<-merge(x=merge_bbwr, y=zahlung, by.x="KredNr.x", by.y="KredNr", all.
 
 # Left Join mit Kreditor
 merge_bbwrzk<-merge(x=merge_bbwrz, y=kreditor, by.x="KredNr.x", by.y="KredNr", all.x = TRUE)
-
+dim(merge_bbwrzk)
 # aenderungshistorie
 # Tabelle Kreditor
 kredit<-which(aenderungsHist$Tabelle == "Kreditor")
 aenderungsHist_Kredit <- aenderungsHist[kredit,]
 merge_bbwrzk_ak<-merge(x=merge_bbwrzk, y=aenderungsHist_Kredit, by.x="KredNr.x", by.y="ID", all.x = TRUE)
-
+dim(merge_bbwrzk_ak)
 # Tabelle Bestellung
 bestell<-which(aenderungsHist$Tabelle == "Bestellung")
 aenderungsHist_bestell <- aenderungsHist[bestell,]
 merge_bbwrzk_akb<-merge(x=merge_bbwrzk_ak, y=aenderungsHist_bestell, by.x="BestellNr", by.y="ID", all.x = TRUE)
-
+dim(merge_bbwrzk_akb)
 # Tabelle Bestellposition
 # Hilfsspalte mit geaenderter ID - erste Nummer weggeschnitten
 x<-substr(aenderungsHist$ID,2,7)
@@ -125,7 +126,9 @@ spalten<-c("PosNr_Bestellpos","BestellNr","ErstellTS_Bestellpos","ErstellTS_Best
 # Relevante Ergebnisse als Hilfstabelle. Input für den a-Algorithmus
 hilfstabelle <- merge_bbwrzk_akbb[,spalten]
 ################################################################################
-
+head(hilfstabelle)
+caseID<-hilfstabelle[,"BestellNr"]*10+hilfstabelle[,"PosNr_Bestellpos"]
+hilfstabelle<-cbind(caseID,hilfstabelle)
 ################################################################################
 # PERSISTIEREN DER HILFSTABELLE
 # workbook anscheinend für createSheet benötigt.
@@ -141,16 +144,16 @@ hilfstabelle <- merge_bbwrzk_akbb[,spalten]
 ################################################################################
 # Eventlog erstellen
 
-bestellNr <- unique(hilfstabelle$BestellNr)
+bestellNr <- unique(hilfstabelle$caseID)
 
-head(hilfstabelle)
+aggregate(hilfstabelle$ErstellTS_Bestellpos, by=list(hilfstabelle$PosNr_Bestellpos,hilfstabelle$BestellNr),mean)
+
 #Eventlog initialisieren
 eventlog<-data.frame(caseID= 0, timestamp= Sys.time(), akt= "Test",  stringsAsFactors = F)
-str(eventlog)
 
 #Erstellen des Eventlogs für alle BestellNummern
 for(i in bestellNr){
-  tab<- hilfstabelle[which(hilfstabelle$BestellNr==i),]
+  tab<- hilfstabelle[which(hilfstabelle$caseID==i),]
   
   bestPosTS<- unique(tab$ErstellTS_Bestellpos)
   # bestPosTS<- bestPosTS[-is.na(bestPosTS)]
@@ -230,6 +233,7 @@ for(i in bestellNr){
     aenderTS<-NULL
   }
 
+  
   
   ts<-c(bestPosTS, bestellTS, kreditorTS, einRechnTS, rechnungsTS, warenEinTS, zahlTS,aenderTS)
   lang<- c(bestPosL, bestellL, kreditorL, einRechnL, rechnungL, wareEinL, zahlL, aenderL)
