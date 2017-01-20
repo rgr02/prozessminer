@@ -1,9 +1,8 @@
 server_proto<- function(input,output){
   
-    
-    varianten_Anz<- getVarianten(eventlog)
-
-    varianten_all<- varianten_Anz[,-dim(varianten_Anz)[2]]
+    varianten_all<- getVarianten(eventlog)
+    varianten_Anz<- varianten_all$var
+    varianten_dauer<- varianten_all$dauer
     
     output$abdeckung<- renderPlot({
       anzVar<-sort(varianten_Anz[,"Anzahl"],decreasing = T)
@@ -20,16 +19,15 @@ server_proto<- function(input,output){
         }
         col_bar<- rep("grey",length(anzVar))
         col_bar[start:end]<-"blue"
-        varianten<- varianten_Anz[order(-varianten_Anz$Anzahl),]
-        varianten<- varianten[start:end,]
+        #varianten<- varianten_Anz[order(-varianten_Anz$Anzahl),]
+        #varianten<- varianten[start:end,]
       }else{
         col_bar<- rep("blue",length(anzVar))
       }
       
-      
-      g <- ggplot(anzV, aes(reorder(Variante, -Anzahl),weight= Anzahl))
-      g + geom_bar(fill=col_bar)
-      
+      anzV$percent<-anzV$Anzahl/sum(anzV$Anzahl)*100
+      g <- ggplot(anzV, aes(reorder(Variante, -percent),weight= percent))
+      g + geom_bar(fill=col_bar)+xlab(NULL)+ylab("%")
     })
  
 ####Ab hier individuell von Auswahl abhängig 
@@ -43,7 +41,8 @@ server_proto<- function(input,output){
         varianten<- varianten[start:end,]
       }else{
         print(input$pql)
-        varianten<- getVarianten(eventlog)
+        #varianten<- getVarianten(eventlog,)
+        varianten<- varianten_Anz
       }
     })
     
@@ -103,10 +102,18 @@ server_proto<- function(input,output){
   
     output$statistics<- renderTable({
       varianten<- varianten_sub()
-
+      dauersub<- varianten_dauer[varianten$ID,]
+      
+      dauerSum<- sum(colSums(dauersub[,3:dim(dauersub)[2]]))
+      
+      print(varianten$ID)
       anzC<- sum(varianten$Anzahl)
       anzV<- dim(varianten)[1]
-      data.frame(Variable = c("Anzahl Cases", "Anzahl Varianten"), val= c(anzC, anzV))      
+      durchlaufzeit<-round(seconds_to_period(dauerSum/anzC))
+      cNames<- c("Anzahl Cases", "Anzahl Varianten", "Durchschnittliche Durchlaufszeit")
+      werte<-as.character(c(anzC, anzV, as.character(durchlaufzeit)))
+      
+      data.frame(Variable = cNames, val= werte)      
       
       
     })
@@ -115,11 +122,19 @@ server_proto<- function(input,output){
     bez_X<- reactive({
       bez<-NULL
       varianten<-varianten_sub()
-      varAnz<-varianten[,dim(varianten)[2]]
-      varAnz<- rep(varAnz,each=dim(varianten)[2]-2)
-      varianten<- varianten[,-dim(varianten)[2]]
+      dauer<- varianten_dauer[varianten$ID,-(1:2)]# Spalte ID und Anzahl wird gelöscht
       
+      varAnz<-varianten[,"Anzahl"]
+      varAnz<- rep(varAnz,each=dim(varianten)[2]-3)#spalte ID,  anzahl zu viel und 1 weniger beziehungen
+      varianten<- varianten[,-c(1,2)]#Löschen ID & Anzahl
+      print("BEZ X")
+      print(str(varAnz))
+      print(str(dauer))
+      print(str(varianten))
+      
+      dur<- NULL
       for(i in 1:dim(varianten)[1]){
+        dur<- c(dur, dauer[i,])
         for(j in 1:(dim(varianten)[2]-1)){
           bez_help<-c(varianten[i,j], varianten[i,j+1])
           bez_sub<-bez[which(bez[,1]==bez_help[1]),]
@@ -128,8 +143,13 @@ server_proto<- function(input,output){
           
         }
       }
+      print("dfasrrghgfdghsrt")
+      print(str(dur))
       bez<- as.data.frame(bez,stringsAsFactors=F)
       bez<-cbind(bez,varAnz)
+      bez<-cbind(bez,unlist(dur))
+      colnames(bez)<-c("X1","X2","Anzahl","Dauer")
+      print(head(bez))
       return(bez)
     })#beziehungen mi A X beziehungen
     
@@ -137,7 +157,7 @@ server_proto<- function(input,output){
     
     startEvents<- reactive({
       varianten<- varianten_sub()
-      startEvents<-aggregate(varianten$Anzahl, by=list(varianten[,1]),sum)
+      startEvents<-aggregate(varianten$Anzahl, by=list(varianten[,3]),sum)# Spalte 3 ist Startelement
       colnames(startEvents)<- c("akt","anz")
       #startEvents<- table(varianten[,1])
       return(startEvents)
@@ -146,8 +166,9 @@ server_proto<- function(input,output){
     endEvents<-reactive({
       varianten<- varianten_sub()
       #anzVar<-varianten[,dim(varianten)[2]]
-      var_anz<-varianten[,dim(varianten)[2]]
-      varianten<- varianten[,-dim(varianten)[2]]
+      var_anz<-varianten[,"Anzahl"]
+      #varianten<- varianten[,-dim(varianten)[2]]
+      varianten$Anzahl<-NULL
       bez<- bez_X()
       end_help_anz<-bez[which(bez[,2]=="X"),3]
       
@@ -155,14 +176,10 @@ server_proto<- function(input,output){
       end_help<-bez[which(bez[,2]=="X"),1]
       if(dim(varianten)[1]==1 & varianten[1,dim(varianten)[2]]!="X"){
         endEvents<- data.frame(akt=varianten[1,dim(varianten)[2]],anz=var_anz, stringsAsFactors = F)
-        print("------END")
-        print(varianten[1,dim(varianten)[2]])
-        print(var_anz)
-        print(endEvents)
         }else{
         anzEnd<-aggregate(end_help_anz, by=list(end_help),sum)
         anzEnd<-anzEnd[-which(anzEnd[,1]=="X"),]
-        endEvents<- varianten[,dim(varianten)[2]]
+        endEvents<- varianten[,dim(varianten)[2]]#letztes element varianten
         
         anzEnd_2<-table(endEvents)
         anzEnd_2_akt<-names(anzEnd_2)
@@ -186,7 +203,7 @@ server_proto<- function(input,output){
       bez<-bez_X()
       bez<- bez[which(bez[,1]!="X"),]
       bez<- bez[which(bez[,2]!="X"),]
-      bez<-aggregate(bez$varAnz,by=list(bez$V1,bez$V2),sum)
+      bez<-aggregate(as.matrix(bez[,c("Anzahl","Dauer")]),by=list(bez$X1,bez$X2),sum)
       #doppelte Beziehungen entfernen
       # alsWort<-unique(paste0(bez[,1],"-",bez[,2]))
       # wieOftBez1<-table(paste0(bez[,1],"-",bez[,2]))
@@ -195,7 +212,9 @@ server_proto<- function(input,output){
       # wieOftBez<- wieOftBez[-1]
       # 
       # bez<-wieOftBez
-      colnames(bez)<-c("X1","X2","anz")
+      colnames(bez)<-c("X1","X2","anz","Dauer")
+      print("beziehung!!!!")
+      print(str(bez))
       return(bez)
     })
     
@@ -242,9 +261,14 @@ server_proto<- function(input,output){
     valueE<-c(table(startEvents), anzEnd,bez$anz)
     valueE[which(valueE>30)]<-30
     valueE<- c(100, valueE[-1])
-    
+    print(bez$Dauer/bez$anz)
     if(input$anzeige =="Dauer"){
-      labelE<-NA
+      print("DAuuueroaer")
+      print(bez$Dauer[1:6])
+      print(bez$anz[1:6])
+      durchschnitt<- round(seconds_to_period(bez$Dauer/bez$anz))
+      labelE<-c(rep(NA,length(anzStart)+length(anzEnd)),as.character(durchschnitt))
+      print(labelE)
     }else{
       labelE<- c(anzStart, anzEnd,bez[,3])
     }

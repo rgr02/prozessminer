@@ -1,6 +1,8 @@
 #install.packages("visNetwork")
 library(shiny)
 library(shinydashboard)
+library(lubridate)
+
 #library(networkD3)
 #library(DiagrammeR)
 library(visNetwork)
@@ -8,6 +10,7 @@ library(XLConnect)
 #library(edeaR)
 library(ggplot2)
 library(plyr)
+library(scales)
 #library(corrplot)
 #library(DT)
 #Eventlog unserer Daten
