@@ -1,19 +1,14 @@
-#install.packages("visNetwork")
 library(shiny)
 library(shinydashboard)
 library(lubridate)
-
-#library(networkD3)
-#library(DiagrammeR)
 library(visNetwork)
 library(XLConnect)
-#library(edeaR)
 library(ggplot2)
 library(plyr)
 library(scales)
-#library(corrplot)
-#library(DT)
+
 #Eventlog unserer Daten
+#Dateneinlesen
 srcFile <- file.choose()
 #############################################################################
 
@@ -26,7 +21,7 @@ bestellPos = readWorksheetFromFile(srcFile,sheet="Bestellposition", header=T)
 warenEingang = readWorksheetFromFile(srcFile,sheet="Wareneingang", header=T)
 rechnung = readWorksheetFromFile(srcFile,sheet="Rechnung", header=T)
 zahlung = readWorksheetFromFile(srcFile,sheet="Zahlung", header=T)
-# Soweit funktioniert einmal das Laden der Daten
+# 
 # Umbenennen von Spaltennamen um Namenskonflikte in der Hilfstabelle zu umgehen
 names(kreditor)[names(kreditor) == 'ErstellTS'] <- 'ErstellTS_Kreditor'
 names(bestellung)[names(bestellung) == 'ErstellTS'] <- 'ErstellTS_Bestellung'
@@ -55,10 +50,7 @@ if ('True' %in% is.na(rechnung$BestellNr)) {
 if ('True' %in% is.na(bestellung$BestellNr)) {
   no_BN_BE<-which(is.na(bestellung$BestellNr))
   bestellung<-bestellung[-no_BN_BE,]
-  # Keine NA in BestellNr. 
-  # Zweite Zeile negiert und löscht alle Eintraege !!
-  # Daher sind die if Abfragen notwendig um Generizitaet für verschiedene Input-
-  # daten zu gewaehrleisten.
+  
 }
 
 if ('True' %in% is.na(bestellPos$BestellNr)) {
@@ -78,7 +70,7 @@ if ('True' %in% is.na(zahlung$KredNr)) {
 ################################################################################
 
 ################################################################################
-# verknüpfen der Tabellen
+# verknuepfen der Tabellen
 # aequivalenzen zu SQL Joins in R
 # Inner Join wie Outer Join ohne , all = True
 # Outer join: merge(x = df1, y = df2, by = "CustomerId", all = TRUE)
@@ -129,7 +121,6 @@ spalten<-c("PosNr_Bestellpos","BestellNr","ErstellTS_Bestellpos","ErstellTS_Best
 # Relevante Ergebnisse als Hilfstabelle. Input für den a-Algorithmus
 hilfstabelle <- merge_bbwrzk_akbb[,spalten]
 ################################################################################
-head(hilfstabelle)
 caseID<-hilfstabelle[,"BestellNr"]*10+hilfstabelle[,"PosNr_Bestellpos"]
 hilfstabelle<-cbind(caseID,hilfstabelle)
 ################################################################################
@@ -156,59 +147,34 @@ eventlog<-data.frame(caseID= 0, timestamp= Sys.time(), akt= "Test",  stringsAsFa
 
 #Erstellen des Eventlogs für alle BestellNummern
 for(i in bestellNr){
+  #Hilfstabelle Tab mit nur eintraegen mit bestellNr
   tab<- hilfstabelle[which(hilfstabelle$caseID==i),]
   
+  #Herauslesen Timestamps
   bestPosTS<- unique(tab$ErstellTS_Bestellpos)
-  # bestPosTS<- bestPosTS[-is.na(bestPosTS)]
-  
   bestellTS<- unique(tab$ErstellTS_Bestellung)
-  #  bestellTS<- bestellTS[-is.na(bestellTS)]
-  
   kreditorTS<- unique(tab$ErstellTS_Kreditor)
-  # kreditorTS<- kreditorTS[-is.na(kreditorTS)]
-  
   einRechnTS<- unique(tab$EingansDat)
-  #  einRechnTS<- einRechnTS[-is.na(einRechnTS)]
-  
   rechnungsTS<- unique(tab$RechnungsDatum)
-  # rechnungsTS<- rechnungsTS[-is.na(rechnungsTS)]
-  
   warenEinTS<- unique(tab$EingangsTS_WAE)
-  #  warenEinTS<- warenEinTS[-is.na(warenEinTS)]
-  
   zahlTS<- unique(tab$ZahlTS_Zahlung)
-  # zahlTS<- zahlTS[-is.na(zahlTS)]
   
-  
+  #Erstellung Aktivitaetennamen
   bestPosL<-rep("Bestellposition erstellt", length(bestPosTS))
-  bestPosK<-rep("b", length(bestPosTS))
-  
   bestellL<-rep("Bestellung erstellt", length(bestellTS))
-  bestellK<-rep("d", length(bestellTS))
-  
   kreditorL<-rep("Kreditor erstellt", length(kreditorTS))
-  kreditorK<-rep("f", length(kreditorTS))
-  
   einRechnL<-rep("Rechnung eingegangen", length(einRechnTS))
-  einRechnK<-rep("i", length(einRechnTS))
-  
   rechnungL<-rep("Rechnung gestellt", length(rechnungsTS))
-  rechnungK<-rep("j", length(rechnungsTS))
-  
   wareEinL<-rep("Ware eingegangen", length(warenEinTS))
-  wareEinK<-rep("k", length(warenEinTS))
-  
   zahlL<-rep("Zahlung durchgefuehrt", length(zahlTS))
-  zahlK<-rep("l", length(zahlTS))
   
   tabAender<- tab[!is.na(tab$AenderTS),c("AenderTS", "Feld", "Wert_neu","Tabelle")]
   tabAender<-tabAender[!duplicated(tabAender),]
-
+  
+  #Herauslesen der Eventlogeintraege von Tabelle Aenderungshistorie
   aenderTS<-tabAender$AenderTS
   aenderL<-NULL
-  
   if(dim(tabAender)[1]>0){
-    print("bin im IF Habe mindestens eine Zeile")
     for(j in 1:dim(tabAender)[1]){
       if(tabAender[j,"Feld"]=="Menge"){
         aenderL<- c(aenderL, "Bestellmenge geaendert")
@@ -229,13 +195,13 @@ for(i in bestellNr){
         aenderL<- c(aenderL, "Bestellung storniert")
       }
     }
-
+    
   }
   if(length(aenderL)!=length(aenderTS)){
     aenderL<-NULL
     aenderTS<-NULL
   }
-
+  
   
   
   ts<-c(bestPosTS, bestellTS, kreditorTS, einRechnTS, rechnungsTS, warenEinTS, zahlTS,aenderTS)
@@ -244,7 +210,7 @@ for(i in bestellNr){
   
   eventlog1<-data.frame(caseID= i, timestamp= ts, akt= lang, stringsAsFactors = F)
   eventlog1_ord<- eventlog1[order(eventlog1$timestamp),]
-
+  
   eventlog<- rbind(eventlog, eventlog1_ord)
 }
 
@@ -259,4 +225,3 @@ eventlog<-eventlog_ohneNA
 # setColumnWidth(wb_Event,"Eventlog",column = c(1:13),5000)
 # saveWorkbook(wb_Event)
 # writeWorksheetToFile(srcFile, eventlog, sheet = "Eventlog")
-str(eventlog)
