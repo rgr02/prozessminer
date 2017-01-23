@@ -4,7 +4,7 @@ library(lubridate)
 library(visNetwork)
 library(XLConnect)
 library(ggplot2)
-library(plyr)
+#library(plyr)
 library(scales)
 #############################################################################
 #DEFINITION EVENTLOG

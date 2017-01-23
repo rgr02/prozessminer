@@ -58,6 +58,15 @@ server<- function(input,output){
     eingabe<-gsub(" ", "", input$pql, fixed = TRUE)
     eingabe<-unlist(strsplit(eingabe,"->"))
     eingabe[which(eingabe=="*")]<-"[a-z]*"
+    nots<-grep("^!", eingabe)
+    #Regulaeren Ausdruck fuer not bilden
+    if(length(nots)>0){
+      eingabeNot<-eingabe
+      eingabeNot[nots]<-substr(eingabeNot[nots],2,nchar(eingabeNot[nots]))
+      eingabeNot<- paste(eingabeNot, collapse="")
+      eingabeNot<-tolower(eingabeNot)
+      eingabe[nots]<-"[a-z]*"
+    }
     eingabe<- paste(eingabe, collapse="")
     eingabe<-tolower(eingabe)
     
@@ -71,7 +80,12 @@ server<- function(input,output){
     }
     varWort<-tolower(varWort)
     rows<-grep(eingabe, varWort, perl=TRUE, value=FALSE)
-    
+
+    if(length(nots)>0){
+      rowsNot<-grep(eingabeNot, varWort, perl=T, value=FALSE)
+      rows<-rows[-which(rows%in%rowsNot)]
+    }
+
     varianten<- varianten[rows,]
     
   })
