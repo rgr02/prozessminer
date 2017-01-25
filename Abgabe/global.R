@@ -12,17 +12,16 @@ library(scales)
 #Großer datensatz
 # setwd("~/JKU/5.Semester/DKE PR/CPM_OLAP_Table_20170117_080551")
 # 
-# eventlog<- read.csv2("eventlog2.csv",stringsAsFactors = F,header = T)
-# head(eventlog)
-# eventlog$X_SORTING<-NULL
-# eventlog$ACTIVITY_DE<-NULL
+# eventlog_big<- read.csv2("eventlog2.csv",stringsAsFactors = F,header = T)
+# eventlog_big$X_SORTING<-NULL
+# eventlog_big$ACTIVITY_DE<-NULL
 # 
-# colnames(eventlog)<-c("caseID", "akt", "timestamp")
-# eventlog$timestamp<- as.POSIXct(eventlog$timestamp)
-# eventlog<-eventlog[with(eventlog, order(caseID, timestamp)), ]
+# colnames(eventlog_big)<-c("caseID", "akt", "timestamp")
+# eventlog_big$timestamp<- as.POSIXct(eventlog_big$timestamp)
+# eventlog_big<-eventlog_big[with(eventlog_big, order(caseID, timestamp)), ]
 
 
-eventlog<-eventlog
+eventlog<-eventlog_einkauf
 
 #############################################################################
 #GLOBALE FUNKTIONEN

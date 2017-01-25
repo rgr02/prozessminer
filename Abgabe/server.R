@@ -36,7 +36,7 @@ server<- function(input,output){
     g + geom_bar(fill=col_bar)+xlab(NULL)+ylab("%")
   })
   
-  ####Ab hier individuell von Auswahl abhängig 
+#########Ab hier individuell von Auswahl abhängig 
   #Funktion nach Auswahl Abdeckung Varianten auswaehlen
   varianten_sub_act<- reactive({
     if(!is.null(input$plot_brush)){
@@ -119,14 +119,13 @@ server<- function(input,output){
     
     dauerSum<- sum(colSums(dauersub[,3:dim(dauersub)[2]]))
     
-    print(varianten$ID)
     anzC<- sum(varianten$Anzahl)#anzahl Cases
     anzV<- dim(varianten)[1]# Anzahl Varianten
     durchlaufzeit<-round(seconds_to_period(dauerSum/anzC))
     cNames<- c("Anzahl Cases", "Anzahl Varianten", "Durchschnittliche Durchlaufszeit")
     werte<-as.character(c(anzC, anzV, as.character(durchlaufzeit)))
     
-    data.frame(Variable = cNames, val= werte)      
+    data.frame(Kennzahl = cNames, Wert= werte)      
     
     
   })
@@ -242,8 +241,8 @@ server<- function(input,output){
     
     #Erstellung Graph
     g <- ggplot(anzAkt, aes(akt,weight= anz))
-    g + geom_bar()+
-      theme(axis.text.x=element_text(angle=30,hjust=1,vjust=0.5))+
+    g + geom_bar(fill="blue")+
+      theme(axis.text.x=element_text(angle=20,hjust=1,vjust=0.5))+
       ylab(NULL)+xlab(NULL)
   })
   

@@ -212,7 +212,7 @@ for(i in bestellNr){
 eventlog<- eventlog[-1,]
 #NAs entfernen
 eventlog_ohneNA<- eventlog[-which(is.na(eventlog$timestamp)),]
-eventlog<-eventlog_ohneNA
+eventlog_einkauf<-eventlog_ohneNA
 #In Exeldokument speichern
 # wb_Event <- loadWorkbook(srcFile, create = T)
 # createSheet(wb_Event,"Eventlog") # Name für das Arbeitsblatt
