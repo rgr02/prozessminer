@@ -10,7 +10,7 @@ body<- dashboardBody(
     column(width=5,
            fluidRow(
              column(width=6,
-                    h4("Pocess Query Language"),
+                    h4("Process Query Language"),
                     textInput("pql", label=NULL,placeholder = "Eingabe"),
                     textOutput("pqlWarning"),
                     actionButton("pqlButton",label="Aktualisieren"),
